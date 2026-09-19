@@ -1,0 +1,625 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/sprites/chopper.png" id="2_chopper"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tree.png" id="3_tree"]
+[ext_resource type="Theme" path="res://assets/themes/chopper_theme.tres" id="4_theme"]
+[ext_resource type="PackedScene" path="res://scenes/tree_preview_card.tscn" id="5_preview"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fire"]
+bg_color = Color(0.86, 0.32, 0.22, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.22, 0.1, 0.04, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fire_pressed"]
+bg_color = Color(0.68, 0.2, 0.12, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.16, 0.07, 0.02, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ice"]
+bg_color = Color(0.35, 0.62, 0.92, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.22, 0.1, 0.04, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ice_pressed"]
+bg_color = Color(0.22, 0.45, 0.75, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.16, 0.07, 0.02, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bolt"]
+bg_color = Color(0.95, 0.82, 0.12, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.22, 0.1, 0.04, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bolt_pressed"]
+bg_color = Color(0.78, 0.64, 0.05, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.16, 0.07, 0.02, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_earth"]
+bg_color = Color(0.55, 0.4, 0.24, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.22, 0.1, 0.04, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_earth_pressed"]
+bg_color = Color(0.4, 0.28, 0.14, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.16, 0.07, 0.02, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wind"]
+bg_color = Color(0.22, 0.78, 0.55, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.22, 0.1, 0.04, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wind_pressed"]
+bg_color = Color(0.12, 0.58, 0.4, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.16, 0.07, 0.02, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("4_theme")
+script = ExtResource("1_main")
+
+[node name="Sky" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.62, 0.82, 0.92, 1)
+
+[node name="Ground" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 0.32
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.48, 0.7, 0.38, 1)
+
+[node name="WoodFrame" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"WoodFrame"
+
+[node name="WoodFrameInner" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"WoodFrameInner"
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 18
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="PanelContainer" parent="Margin/Layout"]
+layout_mode = 2
+theme_type_variation = &"WoodSolid"
+
+[node name="HeaderText" type="VBoxContainer" parent="Margin/Layout/Header"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Margin/Layout/Header/HeaderText"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0.12, 0.05, 0.02, 0.7)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 32
+text = "CHOPPER"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Margin/Layout/Header/HeaderText"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.89, 0.74, 1)
+theme_override_font_sizes/font_size = 13
+text = "Mobile Clicker Edition"
+horizontal_alignment = 1
+
+[node name="StatsBar" type="PanelContainer" parent="Margin/Layout"]
+layout_mode = 2
+
+[node name="StatsGrid" type="GridContainer" parent="Margin/Layout/StatsBar"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+columns = 3
+
+[node name="StatChops" type="PanelContainer" parent="Margin/Layout/StatsBar/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatCell"
+
+[node name="StatChopsBox" type="VBoxContainer" parent="Margin/Layout/StatsBar/StatsGrid/StatChops"]
+layout_mode = 2
+
+[node name="ChopsValue" type="Label" parent="Margin/Layout/StatsBar/StatsGrid/StatChops/StatChopsBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.22, 0.09, 1)
+theme_override_font_sizes/font_size = 24
+text = "0"
+horizontal_alignment = 1
+
+[node name="ChopsLabel" type="Label" parent="Margin/Layout/StatsBar/StatsGrid/StatChops/StatChopsBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.12, 1)
+theme_override_font_sizes/font_size = 12
+text = "Total Chops"
+horizontal_alignment = 1
+
+[node name="StatCps" type="PanelContainer" parent="Margin/Layout/StatsBar/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatCell"
+
+[node name="StatCpsBox" type="VBoxContainer" parent="Margin/Layout/StatsBar/StatsGrid/StatCps"]
+layout_mode = 2
+
+[node name="CpsValue" type="Label" parent="Margin/Layout/StatsBar/StatsGrid/StatCps/StatCpsBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.22, 0.09, 1)
+theme_override_font_sizes/font_size = 24
+text = "0"
+horizontal_alignment = 1
+
+[node name="CpsLabel" type="Label" parent="Margin/Layout/StatsBar/StatsGrid/StatCps/StatCpsBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.12, 1)
+theme_override_font_sizes/font_size = 12
+text = "Per Second"
+horizontal_alignment = 1
+
+[node name="StatLevel" type="PanelContainer" parent="Margin/Layout/StatsBar/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatCell"
+
+[node name="StatLevelBox" type="VBoxContainer" parent="Margin/Layout/StatsBar/StatsGrid/StatLevel"]
+layout_mode = 2
+
+[node name="TreeLevelValue" type="Label" parent="Margin/Layout/StatsBar/StatsGrid/StatLevel/StatLevelBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.22, 0.09, 1)
+theme_override_font_sizes/font_size = 24
+text = "1"
+horizontal_alignment = 1
+
+[node name="TreeLevelLabel" type="Label" parent="Margin/Layout/StatsBar/StatsGrid/StatLevel/StatLevelBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.12, 1)
+theme_override_font_sizes/font_size = 12
+text = "Tree Level"
+horizontal_alignment = 1
+
+[node name="PlayArea" type="PanelContainer" parent="Margin/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"WoodPlay"
+
+[node name="PlayInner" type="Control" parent="Margin/Layout/PlayArea"]
+clip_contents = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 240)
+
+[node name="PrestigeBadge" type="Label" parent="Margin/Layout/PlayArea/PlayInner"]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 168.0
+offset_bottom = 42.0
+theme_type_variation = &"PrestigeBadge"
+text = "Prestige 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CenterStage" type="CenterContainer" parent="Margin/Layout/PlayArea/PlayInner"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StageRow" type="HBoxContainer" parent="Margin/Layout/PlayArea/PlayInner/CenterStage"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="TreeColumn" type="VBoxContainer" parent="Margin/Layout/PlayArea/PlayInner/CenterStage/StageRow"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="TreeLevelBadge" type="Label" parent="Margin/Layout/PlayArea/PlayInner/CenterStage/StageRow/TreeColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0.22, 0.1, 0.02, 0.8)
+theme_override_font_sizes/font_size = 16
+text = "Lv. 1"
+horizontal_alignment = 1
+
+[node name="TreeElementBadge" type="Label" parent="Margin/Layout/PlayArea/PlayInner/CenterStage/StageRow/TreeColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.95, 0.7, 1)
+theme_override_font_sizes/font_size = 13
+text = "None"
+horizontal_alignment = 1
+
+[node name="HealthBar" type="ProgressBar" parent="Margin/Layout/PlayArea/PlayInner/CenterStage/StageRow/TreeColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 16)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="TreeSprite" type="TextureRect" parent="Margin/Layout/PlayArea/PlayInner/CenterStage/StageRow/TreeColumn"]
+custom_minimum_size = Vector2(140, 180)
+layout_mode = 2
+texture = ExtResource("3_tree")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="ChopperSprite" type="TextureRect" parent="Margin/Layout/PlayArea/PlayInner/CenterStage/StageRow"]
+custom_minimum_size = Vector2(150, 210)
+layout_mode = 2
+size_flags_vertical = 8
+texture = ExtResource("2_chopper")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="PreviewStrip" type="PanelContainer" parent="Margin/Layout"]
+layout_mode = 2
+
+[node name="PreviewBox" type="VBoxContainer" parent="Margin/Layout/PreviewStrip"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PreviewTitle" type="Label" parent="Margin/Layout/PreviewStrip/PreviewBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.22, 0.09, 1)
+theme_override_font_sizes/font_size = 15
+text = "Next Trees"
+horizontal_alignment = 1
+
+[node name="PreviewRow" type="HBoxContainer" parent="Margin/Layout/PreviewStrip/PreviewBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Preview1" parent="Margin/Layout/PreviewStrip/PreviewBox/PreviewRow" instance=ExtResource("5_preview")]
+layout_mode = 2
+
+[node name="Preview2" parent="Margin/Layout/PreviewStrip/PreviewBox/PreviewRow" instance=ExtResource("5_preview")]
+layout_mode = 2
+
+[node name="Preview3" parent="Margin/Layout/PreviewStrip/PreviewBox/PreviewRow" instance=ExtResource("5_preview")]
+layout_mode = 2
+
+[node name="BottomPanel" type="PanelContainer" parent="Margin/Layout"]
+layout_mode = 2
+theme_type_variation = &"WoodBottom"
+
+[node name="BottomInner" type="VBoxContainer" parent="Margin/Layout/BottomPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ElementTitle" type="Label" parent="Margin/Layout/BottomPanel/BottomInner"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0.2, 1)
+theme_override_font_sizes/font_size = 16
+text = "Elemental Axe"
+horizontal_alignment = 1
+
+[node name="ElementRow" type="HBoxContainer" parent="Margin/Layout/BottomPanel/BottomInner"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Fire" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 12
+theme_override_styles/hover = SubResource("StyleBoxFlat_fire")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fire_pressed")
+theme_override_styles/normal = SubResource("StyleBoxFlat_fire")
+text = "FIRE"
+
+[node name="Ice" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 12
+theme_override_styles/hover = SubResource("StyleBoxFlat_ice")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_ice_pressed")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ice")
+text = "ICE"
+
+[node name="Bolt" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.2, 0.15, 0.05, 1)
+theme_override_font_sizes/font_size = 12
+theme_override_styles/hover = SubResource("StyleBoxFlat_bolt")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_bolt_pressed")
+theme_override_styles/normal = SubResource("StyleBoxFlat_bolt")
+text = "BOLT"
+
+[node name="Earth" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 12
+theme_override_styles/hover = SubResource("StyleBoxFlat_earth")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_earth_pressed")
+theme_override_styles/normal = SubResource("StyleBoxFlat_earth")
+text = "EARTH"
+
+[node name="Wind" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.12, 0.2, 0.12, 1)
+theme_override_font_sizes/font_size = 12
+theme_override_styles/hover = SubResource("StyleBoxFlat_wind")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_wind_pressed")
+theme_override_styles/normal = SubResource("StyleBoxFlat_wind")
+text = "WIND"
+
+[node name="UpgradeGrid" type="GridContainer" parent="Margin/Layout/BottomPanel/BottomInner"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="BetterAxe" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"UpgradeButton"
+
+[node name="AxeBox" type="VBoxContainer" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/BetterAxe"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="AxeTitle" type="Label" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/BetterAxe/AxeBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Better Axe"
+horizontal_alignment = 1
+
+[node name="AxeCost" type="Label" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/BetterAxe/AxeBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.9)
+theme_override_font_sizes/font_size = 12
+text = "Cost: 10"
+horizontal_alignment = 1
+
+[node name="AutoChopper" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"UpgradeButton"
+
+[node name="AutoBox" type="VBoxContainer" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/AutoChopper"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="AutoTitle" type="Label" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/AutoChopper/AutoBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Auto Chopper"
+horizontal_alignment = 1
+
+[node name="AutoCost" type="Label" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/AutoChopper/AutoBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.9)
+theme_override_font_sizes/font_size = 12
+text = "Cost: 100"
+horizontal_alignment = 1
+
+[node name="ElementPower" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"UpgradeButton"
+
+[node name="ElementBox" type="VBoxContainer" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/ElementPower"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="ElementTitleBtn" type="Label" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/ElementPower/ElementBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Element Power"
+horizontal_alignment = 1
+
+[node name="ElementCost" type="Label" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/ElementPower/ElementBox"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.9)
+theme_override_font_sizes/font_size = 12
+text = "Cost: 50"
+horizontal_alignment = 1
+
+[node name="PrestigeReset" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"PrestigeButton"
+
+[node name="PrestigeBox" type="VBoxContainer" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/PrestigeReset"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="PrestigeTitle" type="Label" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/PrestigeReset/PrestigeBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "Prestige Reset"
+horizontal_alignment = 1
+
+[node name="PrestigeHint" type="Label" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/PrestigeReset/PrestigeBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.9)
+theme_override_font_sizes/font_size = 12
+text = "Unlocks at 1000"
+horizontal_alignment = 1

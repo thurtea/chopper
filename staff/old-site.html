@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chopper - A Godot 4 Cozy Defense Game</title>
+  <meta name="description" content="Chopper is a top down action defense game. Chop trees by day. Defend your hut by night. Four elemental forests, one axe.">
+  <meta property="og:title" content="Chopper">
+  <meta property="og:description" content="Chop trees by day. Defend your hut by night.">
+  <meta property="og:url" content="https://thurtea.com/chopper/">
+  <meta property="og:image" content="https://thurtea.com/favicon_io/android-chrome-192x192.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon_io/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon_io/favicon-32x32.png">
+  <link rel="apple-touch-icon" href="/favicon_io/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest: #101d16;
+      --forest-deep: #0a140f;
+      --parchment: #f2e8d0;
+      --parchment-dim: #cdbf9f;
+      --ember: #e8743b;
+      --gold: #d9ad55;
+      --fire: #d4432c;
+      --water: #3a7ec4;
+      --wind: #9ec9a3;
+      --earth: #8a6a3a;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--forest);
+      color: var(--parchment);
+      font-family: Nunito, sans-serif;
+      line-height: 1.65;
+      background-image: radial-gradient(rgba(242,232,208,0.035) 1px, transparent 1px);
+      background-size: 4px 4px;
+    }
+    a { color: var(--gold); }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+    .font-pixel {
+      font-family: "Press Start 2P", monospace;
+      letter-spacing: 0.02em;
+      line-height: 1.5;
+    }
+    .pixel-corners {
+      clip-path: polygon(
+        0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+        100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+        8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
+      );
+    }
+    .chop-divider {
+      height: 22px;
+      width: 100%;
+      background: repeating-linear-gradient(115deg, var(--forest-deep) 0 14px, transparent 14px 28px);
+      clip-path: polygon(
+        0% 0%, 4% 100%, 8% 10%, 12% 100%, 16% 5%, 20% 100%, 24% 15%, 28% 100%,
+        32% 0%, 36% 100%, 40% 10%, 44% 100%, 48% 5%, 52% 100%, 56% 15%, 60% 100%,
+        64% 0%, 68% 100%, 72% 10%, 76% 100%, 80% 5%, 84% 100%, 88% 15%, 92% 100%,
+        96% 0%, 100% 100%, 100% 0%, 0% 0%
+      );
+      opacity: 0.6;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 0 1.25rem; }
+    .kicker {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.6rem;
+      color: var(--gold);
+      margin: 0 0 1rem;
+    }
+    .section { padding: 4.5rem 0; }
+    .section h2 {
+      font-family: "Press Start 2P", monospace;
+      font-size: 1.15rem;
+      color: var(--parchment);
+      margin: 0 0 1.5rem;
+    }
+    .lede, .prose p, .muted { color: var(--parchment-dim); }
+    .lede { font-size: 1.15rem; max-width: 40rem; }
+    .prose p { max-width: 42rem; margin: 0 0 1rem; font-size: 1.05rem; }
+    .center { text-align: center; }
+    .center .lede, .center .prose p { margin-left: auto; margin-right: auto; }
+
+    header.nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(10, 20, 15, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid rgba(217, 173, 85, 0.3);
+    }
+    header.nav .inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      min-height: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: var(--parchment);
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.85rem;
+    }
+    .brand-mark {
+      width: 1.75rem;
+      height: 1.75rem;
+      background: var(--ember);
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 0.35rem 1.1rem;
+      margin: 0;
+      padding: 0.75rem 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    nav a {
+      color: var(--parchment-dim);
+      text-decoration: none;
+    }
+    nav a:hover { color: var(--parchment); }
+
+    .hero {
+      padding: 4rem 0 3.5rem;
+      border-bottom: 2px solid rgba(217, 173, 85, 0.2);
+      background: linear-gradient(180deg, #0d1a13, var(--forest));
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 3rem;
+      align-items: center;
+    }
+    .hero h1 {
+      font-family: "Press Start 2P", monospace;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      margin: 0 0 1.25rem;
+    }
+    .hero .tag {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.6rem;
+      color: var(--ember);
+      margin: 0 0 1rem;
+    }
+
+    .compass {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 0.65rem;
+      align-items: stretch;
+      justify-items: stretch;
+    }
+    .compass-cell {
+      border: 2px solid rgba(217, 173, 85, 0.25);
+      background: #0f1a15;
+      padding: 0.9rem 0.75rem;
+      text-align: center;
+      min-height: 5.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .compass-cell .dir {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .compass-cell .name {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.72rem;
+      margin: 0;
+    }
+    .compass-cell p { margin: 0.35rem 0 0; font-size: 0.8rem; color: var(--parchment-dim); }
+    .c-n { grid-column: 2; grid-row: 1; border-color: var(--water); }
+    .c-n .dir, .c-n .name { color: var(--water); }
+    .c-w { grid-column: 1; grid-row: 2; border-color: var(--wind); }
+    .c-w .dir, .c-w .name { color: var(--wind); }
+    .c-hub {
+      grid-column: 2;
+      grid-row: 2;
+      border-color: var(--gold);
+      background: #14261c;
+    }
+    .c-hub .dir { color: var(--gold); }
+    .c-hub .name { color: var(--parchment); font-size: 0.7rem; }
+    .c-e { grid-column: 3; grid-row: 2; border-color: var(--earth); }
+    .c-e .dir, .c-e .name { color: var(--earth); }
+    .c-s { grid-column: 2; grid-row: 3; border-color: var(--fire); }
+    .c-s .dir, .c-s .name { color: var(--fire); }
+    .c-empty { visibility: hidden; }
+
+    .zones {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+    .zone {
+      padding: 1.4rem 1.5rem;
+      background: #12201a;
+      border: 2px solid rgba(217, 173, 85, 0.25);
+    }
+    .zone.n { border-color: var(--water); background: #0f1a26; }
+    .zone.s { border-color: var(--fire); background: #1c1210; }
+    .zone.w { border-color: var(--wind); background: #121c16; }
+    .zone.e { border-color: var(--earth); background: #1a1710; }
+    .zone .dir {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.55rem;
+      margin: 0 0 0.5rem;
+    }
+    .zone.n .dir, .zone.n h3 { color: var(--water); }
+    .zone.s .dir, .zone.s h3 { color: var(--fire); }
+    .zone.w .dir, .zone.w h3 { color: var(--wind); }
+    .zone.e .dir, .zone.e h3 { color: var(--earth); }
+    .zone h3 {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.85rem;
+      margin: 0 0 0.75rem;
+    }
+    .zone p { margin: 0; color: var(--parchment-dim); font-size: 0.95rem; }
+
+    .loop {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    .loop-card {
+      padding: 1.6rem 1.7rem;
+      background: #14261c;
+      border: 2px solid rgba(217, 173, 85, 0.45);
+    }
+    .loop-card.night {
+      background: #241611;
+      border-color: rgba(232, 116, 59, 0.5);
+    }
+    .loop-card h3 {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.8rem;
+      margin: 0 0 1rem;
+    }
+    .loop-card.day h3 { color: var(--gold); }
+    .loop-card.night h3 { color: var(--ember); }
+    .loop-card ul {
+      margin: 0;
+      padding-left: 1.1rem;
+      color: var(--parchment-dim);
+    }
+    .loop-card li { margin-bottom: 0.7rem; }
+    .loop-card li:last-child { margin-bottom: 0; }
+    .loop-card strong { color: var(--parchment); }
+
+    .tiers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .tier {
+      text-align: center;
+      padding: 1.25rem 1rem;
+      background: #12201a;
+      border: 1px solid rgba(217, 173, 85, 0.3);
+    }
+    .tier .hits {
+      font-family: "Press Start 2P", monospace;
+      font-size: 1.4rem;
+      color: var(--ember);
+      margin: 0 0 0.5rem;
+    }
+    .tier h3 {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.65rem;
+      margin: 0 0 0.5rem;
+    }
+    .tier p { margin: 0; font-size: 0.9rem; color: var(--parchment-dim); }
+
+    .boss-box {
+      margin-top: 1.5rem;
+      padding: 1.6rem 1.8rem;
+      background: #0f1a15;
+      border: 2px solid rgba(205, 191, 159, 0.3);
+      text-align: center;
+    }
+    .boss-box h3 {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.75rem;
+      margin: 0 0 0.75rem;
+      color: var(--parchment);
+    }
+    .boss-box p {
+      margin: 0 auto;
+      max-width: 40rem;
+      color: var(--parchment-dim);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .feature {
+      padding: 1.3rem 1.35rem;
+      background: #12201a;
+      border: 1px solid rgba(217, 173, 85, 0.3);
+    }
+    .feature h3 {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.55rem;
+      color: var(--ember);
+      margin: 0 0 0.7rem;
+    }
+    .feature p { margin: 0; font-size: 0.92rem; color: var(--parchment-dim); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .stat {
+      padding: 1.2rem;
+      background: #14261c;
+      border: 1px solid rgba(217, 173, 85, 0.3);
+    }
+    .stat h3 {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.55rem;
+      color: var(--ember);
+      margin: 0 0 0.45rem;
+    }
+    .stat p { margin: 0; font-size: 0.95rem; color: var(--parchment-dim); }
+
+    footer {
+      border-top: 2px solid rgba(217, 173, 85, 0.2);
+      background: var(--forest-deep);
+      padding: 2rem 1.25rem;
+    }
+    footer .inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    footer p { margin: 0; font-size: 0.85rem; color: var(--parchment-dim); }
+    footer a { color: var(--parchment-dim); text-decoration: none; }
+    footer a:hover { color: var(--parchment); }
+
+    .deep { background: var(--forest-deep); }
+
+    @media (max-width: 860px) {
+      .hero-grid, .loop, .features, .zones, .stats, .tiers { grid-template-columns: 1fr; }
+      .features { grid-template-columns: 1fr 1fr; }
+      .hero { padding-top: 2.5rem; }
+    }
+    @media (max-width: 560px) {
+      .features, .zones { grid-template-columns: 1fr; }
+      .compass { gap: 0.4rem; }
+      .compass-cell { min-height: 4.5rem; padding: 0.7rem 0.5rem; }
+      .compass-cell .name { font-size: 0.58rem; }
+      nav ul { font-size: 0.8rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark pixel-corners"></span>
+        CHOPPER
+      </a>
+      <nav>
+        <ul>
+          <li><a href="#premise">Story</a></li>
+          <li><a href="#world">World</a></li>
+          <li><a href="#loop">Loop</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#status">Status</a></li>
+          <li><a href="toolkit.html">Tools</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="tag">A COZY ACTION DEFENSE GAME FOR GODOT 4</p>
+        <h1>CHOPPER</h1>
+        <p class="lede">By day you chop your way through four elemental forests. Every swing can shake saplings loose. By night those saplings grow into trees that want your hut back. Keep the fire lit. Keep the axe sharp.</p>
+      </div>
+      <div class="compass" aria-label="Map of the four forests around the hut">
+        <div class="compass-cell c-empty"></div>
+        <div class="compass-cell pixel-corners c-n">
+          <span class="dir">NORTH</span>
+          <p class="name">WATER</p>
+        </div>
+        <div class="compass-cell c-empty"></div>
+        <div class="compass-cell pixel-corners c-w">
+          <span class="dir">WEST</span>
+          <p class="name">WIND</p>
+        </div>
+        <div class="compass-cell pixel-corners c-hub">
+          <span class="dir">HUB</span>
+          <p class="name">HUT + POND</p>
+        </div>
+        <div class="compass-cell pixel-corners c-e">
+          <span class="dir">EAST</span>
+          <p class="name">EARTH</p>
+        </div>
+        <div class="compass-cell c-empty"></div>
+        <div class="compass-cell pixel-corners c-s">
+          <span class="dir">SOUTH</span>
+          <p class="name">FIRE</p>
+        </div>
+        <div class="compass-cell c-empty"></div>
+      </div>
+    </div>
+  </section>
+  <div class="chop-divider"></div>
+
+  <section class="section" id="premise">
+    <div class="wrap center">
+      <p class="kicker">THE PREMISE</p>
+      <h2>One hut. One pond. Four forests that remember every tree you fell.</h2>
+      <div class="prose">
+        <p>You wake at a small hut beside a still pond, the last quiet ground in a forest that has forgotten how to sleep. Around you, four woodlands press in, each carrying its own temper. Water holds the north. Fire burns to the south. Wind moves in the west. Earth stands patient and heavy to the east.</p>
+        <p>Every tree you chop feeds the hut and can drop saplings. Comfort has a cost. What you cut by daylight is what comes looking for you after dark. Some of those walking trees carry an element. Some do not. The only things standing between your hut and the treeline are an axe, a fire, and whatever luck the night decides to give you.</p>
+      </div>
+    </div>
+  </section>
+  <div class="chop-divider"></div>
+
+  <section class="section deep" id="world">
+    <div class="wrap">
+      <div class="center">
+        <p class="kicker">THE WORLD</p>
+        <h2>Four zones, four tempers, one hub between them</h2>
+      </div>
+      <div class="zones">
+        <article class="zone n pixel-corners">
+          <p class="dir">NORTH</p>
+          <h3>Water</h3>
+          <p>Slow rivers and heavy roots. Trees grow tall and stubborn near the banks, and what grows back from their stumps moves in patient currents. Kill enough water trees at night and you carry that buff until dawn.</p>
+        </article>
+        <article class="zone s pixel-corners">
+          <p class="dir">SOUTH</p>
+          <h3>Fire</h3>
+          <p>Dry timber and low embers. Trees here burn hot once they fall, and the saplings that follow do not wait patiently. Fire nights hit hard. Fire buffs hit harder if you can take the trees down first.</p>
+        </article>
+        <article class="zone w pixel-corners">
+          <p class="dir">WEST</p>
+          <h3>Wind</h3>
+          <p>Open groves and leaning trunks. These trees give easily in the gusts, and what grows back from them moves fast. Wind enemies close the gap before you are ready unless you have already bound their element.</p>
+        </article>
+        <article class="zone e pixel-corners">
+          <p class="dir">EAST</p>
+          <h3>Earth</h3>
+          <p>Dense groves and old growth. These trees take the most swings to bring down, and the ground itself seems to remember every one you take. Earth nights are slow, heavy, and stubborn.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+  <div class="chop-divider"></div>
+
+  <section class="section" id="loop">
+    <div class="wrap">
+      <div class="center">
+        <p class="kicker">CORE LOOP</p>
+        <h2>Day builds it. Night tests it.</h2>
+      </div>
+      <div class="loop">
+        <div class="loop-card day pixel-corners">
+          <h3>DAY</h3>
+          <ul>
+            <li><strong>Pick a forest.</strong> Head north for water, south for fire, west for wind, or east for earth.</li>
+            <li><strong>Chop by size.</strong> Small trees fall in one hit. Medium trees take two. Large trees take three.</li>
+            <li><strong>Shake saplings loose.</strong> Each strike can drop a random number of saplings. Those saplings are what spawn the trees that walk at night.</li>
+            <li><strong>Haul wood home.</strong> Fallen trees drop wood. Carry it back to patch and upgrade the hut.</li>
+          </ul>
+        </div>
+        <div class="loop-card night pixel-corners">
+          <h3>NIGHT</h3>
+          <ul>
+            <li><strong>Saplings wake up.</strong> When the sun sets, the day's saplings become tree enemies. Small, medium, and large, matching the hits it took to drop them. Some carry water, fire, wind, or earth. Some carry nothing.</li>
+            <li><strong>They path to the hut.</strong> Hold the line. The hut is the only thing that matters after dark.</li>
+            <li><strong>Steal a buff, or don't.</strong> Cut an elemental tree down and keep that element for the rest of the night. Two water trees dead means you carry water until dawn. Non-elemental trees still take hits. They just do not give you a buff.</li>
+            <li><strong>Lucky night or not.</strong> Elemental saplings tend to sit opposite whatever you are most likely to have bound. Plain trees can fill the gaps. RNG can still tilt a night easy, or make it a grind.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="center" style="margin-top: 3rem;">
+        <p class="kicker">TREES AND ENEMIES</p>
+        <h2>One chop. Two chop. Three chop.</h2>
+        <p class="lede">Logging should feel good. The same three sizes that make chopping satisfying also make the night readable. You always know how many hits something will take, whether it carries an element or not.</p>
+      </div>
+      <div class="tiers">
+        <div class="tier pixel-corners">
+          <p class="hits">1</p>
+          <h3>SMALL</h3>
+          <p>One swing to fell. One swing to kill when it comes back at night.</p>
+        </div>
+        <div class="tier pixel-corners">
+          <p class="hits">2</p>
+          <h3>MEDIUM</h3>
+          <p>Two swings by day. Two hits to put it down after dark.</p>
+        </div>
+        <div class="tier pixel-corners">
+          <p class="hits">3</p>
+          <h3>LARGE</h3>
+          <p>Three swings, and a night enemy that takes three hits to drop.</p>
+        </div>
+      </div>
+      <p class="muted" style="margin-top: 1.25rem; text-align: center;">Elemental or not, the hit count stays the same. Water, fire, wind, and earth trees can grant a night buff. Plain trees cannot.</p>
+        <h3>THE BOSS TREE</h3>
+        <p>Once in a while a boss sapling falls off a trunk. It takes root. It grows over a stretch of days. Cutting it down is a job of its own. Fighting it that night is the real fight, a boss battle built from the same loop you have been living in.</p>
+      </div>
+    </div>
+  </section>
+  <div class="chop-divider"></div>
+
+  <section class="section deep" id="features">
+    <div class="wrap">
+      <div class="center">
+        <p class="kicker">KEY FEATURES</p>
+        <h2>What you are actually doing, hour to hour</h2>
+      </div>
+      <div class="features">
+        <div class="feature pixel-corners">
+          <h3>TIERED CHOPPING</h3>
+          <p>Small, medium, and large trees each demand a different number of hits, so every grove rewards reading the treeline before you swing.</p>
+        </div>
+        <div class="feature pixel-corners">
+          <h3>SAPLING CONSEQUENCE</h3>
+          <p>Strikes can drop a random handful of saplings. Those saplings become the night's enemies, so your own chopping writes the fight you have to survive.</p>
+        </div>
+        <div class="feature pixel-corners">
+          <h3>LUCKY AND UNLUCKY NIGHTS</h3>
+          <p>Elemental saplings tend to sit opposite whatever you are most likely to have enchanted. Plain trees can fill a night without tilting the matchup. Chance can still swing a night easy, or load it until it hurts.</p>
+        </div>
+        <div class="feature pixel-corners">
+          <h3>NIGHT BUFFS</h3>
+          <p>Kill the walking trees of one element and carry that buff until dawn. Stack a couple of the same kind and the rest of the night changes shape. Plain trees do not grant a buff.</p>
+        </div>
+        <div class="feature pixel-corners">
+          <h3>HUT REPAIR</h3>
+          <p>Wood collected during the day patches damage from the night before and funds upgrades that keep the hub standing longer.</p>
+        </div>
+        <div class="feature pixel-corners">
+          <h3>FOUR DISTINCT ZONES</h3>
+          <p>Water to the north, fire to the south, wind to the west, and earth to the east. Each one has its own pacing and night behavior. Non-elemental trees can show up in any of them.</p>
+        </div>
+        <div class="feature pixel-corners">
+          <h3>BOSS SAPLINGS</h3>
+          <p>A rare sapling takes root and grows over days. Chopping it down is an event. Fighting it that night is a boss battle.</p>
+        </div>
+        <div class="feature pixel-corners">
+          <h3>A HUB WORTH DEFENDING</h3>
+          <p>The pond and hut at the center of the map are small, personal, and yours. Every night has something concrete to protect.</p>
+        </div>
+        <div class="feature pixel-corners">
+          <h3>PLAIN TREES</h3>
+          <p>Not every sapling carries a temper. Non-elemental enemies still come in small, medium, and large. They take the same hits. They just do not give you water, fire, wind, or earth when they fall.</p>
+        </div>
+        <div class="feature pixel-corners">
+          <h3>CRAFTING, LATER</h3>
+          <p>A crafting expansion is on the table if players ask for it enough. For now the loop is chop, survive, and make logging feel as good as it should.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="chop-divider"></div>
+
+  <section class="section" id="status">
+    <div class="wrap center">
+      <p class="kicker">DEVELOPMENT STATUS</p>
+      <h2>Built in Godot 4, in active development</h2>
+      <p class="lede">Chopper is in early development. The hub, the four zones, and the day and night cycle are being built and tested. Sapling drops, night buffs, and boss growth are in progress. No release date has been set.</p>
+      <div class="stats">
+        <div class="stat pixel-corners">
+          <h3>ENGINE</h3>
+          <p>Godot 4</p>
+        </div>
+        <div class="stat pixel-corners">
+          <h3>STAGE</h3>
+          <p>Early development</p>
+        </div>
+        <div class="stat pixel-corners">
+          <h3>PLATFORMS</h3>
+          <p>PC first. Other targets later.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark pixel-corners"></span>
+        CHOPPER
+      </a>
+      <p><a href="toolkit.html">Toolkit</a> · <a href="https://thurtea.com/">thurtea.com</a> · Made with Godot 4</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta 
+charset="UTF-8"> <meta name="viewport" 
+content="width=device-width, initial-scale=1.0"> 
+<title>Chopper: Prototype Build Guide</title> 
+<link rel="preconnect" 
+href="https://fonts.googleapis.com"> <link 
+rel="preconnect" href="https://fonts.gstatic.com" 
+crossorigin> <link 
+href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" 
+rel="stylesheet"> <style>
+  :root {
+    --bg: #17201a; --surface: #1e2a21; 
+    --surface-2: #24312a; --border: #34432f; 
+    --text: #ede6d6; --muted: #a4b39c; --accent: 
+    #d9a441;
+    --accent-soft: #3a3120;
+  }
+  * { box-sizing: border-box; } body { margin: 0; 
+    background: var(--bg); color: var(--text); 
+    font-family: 'Inter', sans-serif; font-size: 
+    17px; line-height: 1.65;
+  }
+  main { max-width: 720px; margin: 0 auto; 
+    padding: 5rem 1.5rem 6rem;
+  }
+  main a { color: var(--accent); text-decoration: 
+    none;
+  }
+  main a:hover { text-decoration: underline;
+  }
+  h1, h2, h3 { font-family: 'Fraunces', serif; 
+    font-weight: 600; line-height: 1.2; color: 
+    var(--text);
+  }
+  .hero { animation: rise 0.7s ease-out;
+  }
+  @keyframes rise { from { opacity: 0; transform: 
+    translateY(10px); } to { opacity: 1; 
+    transform: translateY(0); }
+  }
+  .hero h1 { font-size: 3rem; margin: 0 0 0.6rem; 
+    letter-spacing: -0.01em;
+  }
+  .hero p.subtitle { font-size: 1.15rem; color: 
+    var(--muted); max-width: 34rem; margin: 0 0 
+    2.5rem;
+  }
+  .summary { background: var(--surface); border: 
+    1px solid var(--border); border-radius: 10px; 
+    padding: 1.5rem 1.75rem; margin-bottom: 
+    3.5rem;
+  }
+  .summary h2 { font-size: 1.1rem; margin: 0 0 
+    0.6rem;
+  }
+  .summary p { margin: 0; color: var(--muted);
+  }
+  .scope { background: var(--surface); border: 1px 
+    solid var(--border); border-left: 3px solid 
+    var(--accent); border-radius: 0 10px 10px 0; 
+    padding: 1.5rem 1.75rem; margin-bottom: 
+    3.5rem;
+  }
+  .scope h2 { font-size: 1.1rem; margin: 0 0 
+    0.6rem;
+  }
+  .scope p { margin: 0 0 0.8rem; color: 
+    var(--muted);
+  }
+  .scope ul { margin: 0; padding-left: 1.2rem; 
+    color: var(--muted);
+  }
+  .scope li { margin-bottom: 0.5rem;
+  }
+  .step { display: grid; grid-template-columns: 
+    3.5rem 1fr; gap: 1.25rem; margin-bottom: 
+    3.5rem;
+  }
+  .step-body { min-width: 0;
+  }
+  .step-number { font-family: 'Fraunces', serif; 
+    font-size: 2.75rem; font-weight: 600; color: 
+    var(--accent); line-height: 1;
+  }
+  .step-body h2 { font-size: 1.5rem; margin: 
+    0.1rem 0 0.9rem;
+  }
+  .step-body p { margin: 0 0 1rem;
+  }
+  .step-body ul { margin: 0 0 1rem; padding-left: 
+    1.2rem;
+  }
+  .step-body li { margin-bottom: 0.6rem;
+  }
+  .step-body li code, p code { background: 
+    var(--surface-2); padding: 0.1rem 0.4rem; 
+    border-radius: 4px; font-family: 'JetBrains 
+    Mono', monospace; font-size: 0.88em;
+  }
+  .code-panel { background: var(--surface); 
+    border: 1px solid var(--border); 
+    border-radius: 10px; overflow: hidden; margin: 
+    0 0 1.25rem;
+  }
+  .code-panel .filename { font-family: 'JetBrains 
+    Mono', monospace; font-size: 0.85rem; color: 
+    var(--muted); padding: 0.6rem 1.1rem; 
+    border-bottom: 1px solid var(--border);
+  }
+  .code-panel pre { margin: 0; padding: 1.1rem; 
+    overflow-x: auto;
+  }
+  .code-panel code { font-family: 'JetBrains 
+    Mono', monospace; font-size: 0.86rem; 
+    line-height: 1.6; color: var(--text);
+  }
+  .closing { border-top: 1px solid var(--border); 
+    padding-top: 2.5rem; margin-top: 1rem;
+  }
+  .closing h2 { font-size: 1.4rem; margin: 0 0 
+    1rem;
+  }
+  .closing ul { padding-left: 1.2rem; color: 
+    var(--muted);
+  }
+  .closing li { margin-bottom: 0.5rem;
+  }
+  footer { max-width: 720px; margin: 0 auto; 
+    padding: 0 1.5rem 4rem; color: var(--muted); 
+    font-size: 0.9rem;
+  }
+  footer h3 { font-size: 1rem; color: var(--text); 
+    margin: 0 0 0.8rem;
+  }
+  footer ul { padding-left: 1.1rem;
+  }
+  footer li { margin-bottom: 0.5rem;
+  }
+  footer a { color: var(--accent); 
+    text-decoration: none;
+  }
+  footer a:hover { text-decoration: underline;
+  }
+  @media (max-width: 640px) { main { padding: 3rem 
+      1.25rem 4rem;
+    }
+    .hero h1 { font-size: 2.25rem;
+    }
+    .hero p.subtitle { font-size: 1.05rem;
+    }
+    .step { grid-template-columns: 1fr; gap: 
+      0.4rem;
+    }
+    .step-number { font-size: 1.5rem;
+    }
+    .code-panel pre { padding: 0.9rem;
+    }
+    .code-panel code { font-size: 0.78rem;
+    }
+  }
+  .crumb { max-width: 720px; margin: 0 auto; padding: 1.25rem 1.5rem 0; font-size: 0.9rem; color: var(--muted); }
+  .crumb a { color: var(--accent); text-decoration: none; }
+  .crumb a:hover { text-decoration: underline; }
+</style> </head> <body>
+  <p class="crumb"><a href="../">Chopper</a> / Staff</p>
+  <main> <div class="hero"> 
+    <h1>Chopper</h1> <p class="subtitle">A build 
+    guide for the day-time chopping mechanic in 
+    Unity.</p>
+  </div> <div class="summary"> <h2>What you are 
+    building</h2> <p>A small scene with a player 
+    capsule, a handful of tree cylinders, and a 
+    swing mechanic: walk into range, click, and a 
+    raycast checks whether you hit a tree. Each 
+    tree has a health value, and it disappears 
+    once that value hits zero. Everything here is 
+    blank shapes, the point is to prove the 
+    mechanic works before any art goes in.</p>
+  </div> <div class="scope"> <h2>Where this fits 
+    in the full design</h2> <p>This guide covers 
+    the day-time chopping mechanic, steps 1 
+    through 4 below, which is phase 1 of a larger 
+    game: a hub with a pond, four elemental 
+    forests, and saplings that grow into tree 
+    enemies that come for the hut after dark. The 
+    tiered chopping built here, one hit for a 
+    small tree, two for medium, three for large, 
+    carries forward as-is into that full loop.</p> 
+    <ul>
+      <li><a href="game-design-document.md">Game 
+      design document</a>, the hub, the four 
+      zones, the sapling and night defense loop, 
+      elemental buffs, and boss trees.</li> <li><a 
+      href="development-plan.md">Development 
+      plan</a>, how the day loop below sequences 
+      into the rest of the build.</li>
+    </ul> </div> <div class="step"> <div 
+    class="step-number">1</div> <div 
+    class="step-body">
+      <h2>Block out the scene</h2> <p>Build every 
+      object with Unity's basic primitives first. 
+      Nothing needs final art yet, the goal is a 
+      scene you can test the mechanic in as fast 
+      as possible.</p> <ul>
+        <li><strong>Ground.</strong> Right-click 
+        in the Hierarchy, choose 3D Object, then 
+        Plane. Set its position to (0, 0, 0).</li> 
+        <li><strong>Player.</strong> Right-click 
+        in the Hierarchy, choose 3D Object, then 
+        Capsule. Name it <code>Player</code>. Set 
+        its position to (0, 1, 0), so it rests on 
+        top of the ground.</li> <li><strong>Axe 
+        holder.</strong> Right-click the Player 
+        capsule and choose Create Empty. Name it 
+        <code>WeaponHolder</code>. Inside it, add 
+        a small Cube to stand in for the axe head, 
+        and move it forward so it sits roughly 
+        where a hand would hold it.</li> 
+        <li><strong>Tree.</strong> Right-click in 
+        the Hierarchy, choose 3D Object, then 
+        Cylinder. Name it <code>Tree</code>. Set 
+        its position to (0, 1, 0) as well.</li> 
+        <li>In the Inspector, open the Tag 
+        dropdown at the top of the window, choose 
+        Add Tag, create a tag named 
+        <code>tree</code>, then come back and 
+        assign that tag to the Cylinder.</li>
+      </ul> </div> </div> <div class="step"> <div 
+    class="step-number">2</div> <div 
+    class="step-body">
+      <h2>Camera and movement</h2> <p>For a fast 
+      third person setup, Unity's Character 
+      Controller component handles movement and 
+      collision without needing a Rigidbody.</p> 
+      <ul>
+        <li>Select the Player object, click Add 
+        Component in the Inspector, and add 
+        Character Controller.</li> <li>Drag the 
+        Main Camera into the Player's hierarchy so 
+        it moves with the player, then position it 
+        slightly behind and above the capsule, 
+        looking over its shoulder.</li> <li>Attach 
+        the script below to the Player.</li>
+      </ul> <div class="code-panel"> <div 
+        class="filename">PlayerMovement.cs</div> 
+        <pre><code>using UnityEngine;
+public class PlayerMovement : MonoBehaviour { 
+    public CharacterController controller; public 
+    float speed = 6f; void Update() {
+        float horizontal = 
+        Input.GetAxisRaw("Horizontal"); float 
+        vertical = Input.GetAxisRaw("Vertical"); 
+        Vector3 direction = new 
+        Vector3(horizontal, 0f, 
+        vertical).normalized; if 
+        (direction.magnitude >= 0.1f) {
+            controller.Move(direction * speed * 
+            Time.deltaTime);
+            // Face the direction of movement, so 
+            // the axe swings toward wherever the 
+            // player is walking
+            transform.rotation = 
+            Quaternion.LookRotation(direction);
+        }
+    }
+}</code></pre>
+      </div> </div> </div> <div class="step"> <div 
+    class="step-number">3</div> <div 
+    class="step-body">
+      <h2>Write the chopping scripts</h2> <p>Two 
+      scripts: one holds a tree's health, the 
+      other handles the axe swing through 
+      raycasting, an invisible line cast forward 
+      from the player to check what it hits.</p> 
+      <div class="code-panel">
+        <div class="filename">TreeHealth.cs, 
+        attach to the Tree cylinder</div> 
+        <pre><code>using UnityEngine;
+public class TreeHealth : MonoBehaviour {
+    // Customize hits per tree size: 1, 2, or 3
+    public int maxHealth = 3; private int 
+    currentHealth; void Start() {
+        currentHealth = maxHealth;
+    }
+    public void TakeDamage(int damageAmount) { 
+        currentHealth -= damageAmount; 
+        Debug.Log(gameObject.name + " took damage, 
+        current health: " + currentHealth); if 
+        (currentHealth <= 0) {
+            ChopDown();
+        }
+    }
+    void ChopDown() {
+        // For a greybox prototype, simply remove 
+        // the tree. Later, spawn log items or 
+        // play a fall animation here.
+        Destroy(gameObject);
+    }
+}</code></pre>
+      </div> <div class="code-panel"> <div 
+        class="filename">AxeInteraction.cs, attach 
+        to the Player</div> <pre><code>using 
+        UnityEngine;
+public class AxeInteraction : MonoBehaviour { 
+    public float attackRange = 3.0f; public int 
+    chopDamage = 1; void Update() {
+        if (Input.GetMouseButtonDown(0)) { 
+            PerformChop();
+        }
+    }
+    void PerformChop() { Ray ray = new 
+        Ray(transform.position, 
+        transform.forward); RaycastHit hit; if 
+        (Physics.Raycast(ray, out hit, 
+        attackRange)) {
+            if (hit.collider.CompareTag("tree")) { 
+                TreeHealth tree = 
+                hit.collider.GetComponent<TreeHealth>(); 
+                if (tree != null) {
+                    tree.TakeDamage(chopDamage);
+                }
+            }
+        }
+    }
+}</code></pre>
+      </div> <div class="fix"> <p 
+        class="label">Fix</p> <p>The original 
+        guide suggested attaching this script to 
+        either the Player or the WeaponHolder. 
+        Attach it to the Player instead. Since the 
+        movement script now rotates the Player 
+        object itself, 
+        <code>transform.forward</code> on the 
+        Player matches the direction it is 
+        walking. If this script sits on 
+        WeaponHolder instead, the swing direction 
+        depends on WeaponHolder's own local 
+        rotation staying untouched, which is an 
+        easy thing to break later without 
+        noticing.</p>
+      </div> </div> </div> <div class="step"> <div 
+    class="step-number">4</div> <div 
+    class="step-body">
+      <h2>Test the loop</h2> <ul> <li>Duplicate 
+        the Tree cylinder a few times and scatter 
+        the copies around the plane.</li> <li>In 
+        each tree's Inspector, set Max Health on 
+        the TreeHealth component, for example 1 
+        for a small tree, 2 for medium, 3 for 
+        large.</li> <li>Press Play.</li> <li>Walk 
+        up to a tree and left click. Watch the 
+        Console tab, the health count should drop 
+        with each swing and the tree should 
+        disappear at zero.</li>
+      </ul> <p>Test this from a few different 
+      approach angles, not just walking straight 
+      at a tree. If chopping only works when you 
+      approach from one particular direction, the 
+      rotation fix in step 2 did not get applied 
+      correctly.</p>
+    </div> </div> <div class="closing"> <h2>Where 
+    this goes next</h2> <p>Once the loop holds up 
+    from every angle, phase 1 is done. The <a 
+    href="development-plan.md">development 
+    plan</a> lays out the rest in full, in 
+    short:</p> <ul>
+      <li>Wood pickups, and hauling wood back to 
+      the hub.</li> <li>Saplings that drop from 
+      chop hits and carry over into the 
+      night.</li> <li>A day and night cycle that 
+      turns those saplings into tree enemies.</li> 
+      <li>Hut health, repair, and defense against 
+      enemies that reach it.</li> <li>Elemental 
+      zones and the buffs earned from killing 
+      elemental enemies.</li> <li>Boss saplings, 
+      and the encounter that follows once one 
+      matures.</li>
+    </ul> <p>The full picture, the hub, the four 
+    zones, and how the elements and buffs work, is 
+    in the <a href="game-design-document.md">game 
+    design document</a>.</p>
+  </div> </main> <footer> <h3>Further reading</h3> 
+  <ul>
+    <li><a 
+    href="https://docs.unity3d.com/Packages/com.unity.charactercontroller@1.0/manual/get-started-third-person.html">Unity's 
+    own documentation on setting up a third person 
+    Character Controller.</a></li> <li><a 
+    href="https://discussions.unity.com/t/still-learning-and-trying-to-make-a-tree-chopping-script/201207">A 
+    Unity community discussion thread on scripting 
+    a tree chopping mechanic.</a></li> <li><a 
+    href="https://www.reddit.com/r/Unity3D/comments/1b9hom6/learning_unity_how_do_i_chop_a_tree/">A 
+    Reddit thread with other approaches to 
+    chopping trees in Unity.</a></li> <li><a 
+    href="https://www.blog.radiator.debacle.us/2017/09/how-to-graybox-blockout-3d-video-game.html">A 
+    write-up on greyboxing and blockout process 
+    for level design.</a></li>
+  </ul> </footer> </body> </html>

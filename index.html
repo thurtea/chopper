@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Chopper</title>
+  <meta name="description" content="Chopper is a 3D game in Unity. Chop trees by day. Defend your hut at night.">
+  <meta property="og:title" content="Chopper">
+  <meta property="og:description" content="A 3D Unity game. Chop trees by day. Defend your hut at night.">
+  <meta property="og:url" content="https://thurtea.com/chopper/">
+  <meta property="og:image" content="https://thurtea.com/favicon_io/android-chrome-192x192.png">
+  <meta property="og:image:width" content="192">
+  <meta property="og:image:height" content="192">
+  <meta property="og:image:type" content="image/png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:image" content="https://thurtea.com/favicon_io/android-chrome-192x192.png">
+  <link rel="canonical" href="https://thurtea.com/chopper/">
+  <link rel="icon" href="/favicon_io/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon_io/android-chrome-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon_io/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon_io/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png">
+  <link rel="manifest" href="/favicon_io/site.webmanifest">
+  <meta name="theme-color" content="#121410">
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top">Chopper</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">Menu</button>
+      <nav id="site-nav" aria-label="Page">
+        <ul>
+          <li><a href="#game">The game</a></li>
+          <li><a href="#loop">Day and night</a></li>
+          <li><a href="#map">Map</a></li>
+          <li><a href="#status">Status</a></li>
+          <li><a class="staff-link" href="newguide.html">Staff</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <p class="eyebrow">3D game in Unity</p>
+      <h1>Chopper</h1>
+      <p class="lede">Chop trees during the day. At night the saplings you knocked loose become enemies and walk toward your hut.</p>
+    </section>
+
+    <section id="game">
+      <h2>The game</h2>
+      <p>You live at a hut next to a pond. Four forests sit around it. North is water, south is fire, west is wind, east is earth.</p>
+      <p>Wood from the trees goes back to the hut for repairs and upgrades. Hitting a tree can drop saplings. Those saplings are what show up as enemies after dark.</p>
+      <p>Some of the walking trees have an element. Kill enough of one kind and you keep that buff until morning. Some have no element. They still take hits. They just don't give a buff.</p>
+      <p>Once in a while a boss sapling drops. It takes root and grows over a few days. Cutting it down is a job. Fighting it that night is the boss fight.</p>
+      <p>Crafting might show up later if people ask for it. Not part of the first build.</p>
+    </section>
+
+    <section id="loop">
+      <h2>Day and night</h2>
+      <div class="split">
+        <article>
+          <h3>Day</h3>
+          <ul>
+            <li>Pick a forest and chop.</li>
+            <li>Small trees take one hit. Medium take two. Large take three.</li>
+            <li>Each swing can drop a random number of saplings.</li>
+            <li>Carry wood home to patch the hut.</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Night</h3>
+          <ul>
+            <li>The day's saplings become tree enemies and path to the hut.</li>
+            <li>Hit counts match the tree size: one, two, or three.</li>
+            <li>Kill elemental trees to hold that element until dawn.</li>
+            <li>Nights can come out easy or ugly depending on what spawned.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="map">
+      <h2>Map</h2>
+      <p>The hut and pond sit in the middle. The four forests are just the four directions.</p>
+      <div class="compass" aria-label="Map of the four forests around the hut">
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell water">
+          <span class="dir">North</span>
+          <span class="name">Water</span>
+        </div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell wind">
+          <span class="dir">West</span>
+          <span class="name">Wind</span>
+        </div>
+        <div class="cell hub">
+          <span class="dir">Hub</span>
+          <span class="name">Hut and pond</span>
+        </div>
+        <div class="cell earth">
+          <span class="dir">East</span>
+          <span class="name">Earth</span>
+        </div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell fire">
+          <span class="dir">South</span>
+          <span class="name">Fire</span>
+        </div>
+        <div class="cell empty" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section id="status">
+      <h2>Status</h2>
+      <p>The 3D Unity version is the one being built. First pass is the chopping loop: walk up to a tree, click, the tree takes damage and goes away when health hits zero. Greybox only, primitives, no art yet.</p>
+      <p>A 2D version is planned later. That will likely be Unity as well.</p>
+      <dl class="facts">
+        <div>
+          <dt>Engine</dt>
+          <dd>Unity, 3D first</dd>
+        </div>
+        <div>
+          <dt>Now</dt>
+          <dd>Chopping prototype</dd>
+        </div>
+        <div>
+          <dt>Platform</dt>
+          <dd>PC first. No release date.</dd>
+        </div>
+      </dl>
+    </section>
+  </main>
+
+  <footer>
+    <p><a href="/">thurtea.com</a></p>
+    <p><a href="newguide.html">Staff</a></p>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>

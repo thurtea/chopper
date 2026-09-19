@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chopper Toolkit - Art and Development Tools</title>
+  <meta name="description" content="Art and development toolkit for Chopper, from 2D pixel art through voxel and low-poly 3D.">
+  <meta property="og:title" content="Chopper Toolkit">
+  <meta property="og:description" content="Art and development tools for Chopper.">
+  <meta property="og:url" content="https://thurtea.com/chopper/toolkit.html">
+  <meta property="og:image" content="https://thurtea.com/favicon_io/android-chrome-192x192.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/favicon_io/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon_io/favicon-32x32.png">
+  <link rel="apple-touch-icon" href="/favicon_io/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --forest: #101d16;
+      --forest-deep: #0a140f;
+      --parchment: #f2e8d0;
+      --parchment-dim: #cdbf9f;
+      --ember: #e8743b;
+      --gold: #d9ad55;
+      --ice: #57d6dd;
+      --earth: #8a6a3a;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--forest);
+      color: var(--parchment);
+      font-family: Nunito, sans-serif;
+      line-height: 1.65;
+      background-image: radial-gradient(rgba(242,232,208,0.035) 1px, transparent 1px);
+      background-size: 4px 4px;
+    }
+    a { color: var(--gold); }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+    .pixel-corners {
+      clip-path: polygon(
+        0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+        100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+        8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
+      );
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 0 1.25rem; }
+    .kicker {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.6rem;
+      color: var(--gold);
+      margin: 0 0 1rem;
+    }
+    .section { padding: 4.5rem 0; }
+    .section h2 {
+      font-family: "Press Start 2P", monospace;
+      font-size: 1.15rem;
+      color: var(--parchment);
+      margin: 0 0 1.5rem;
+    }
+    .lede, .muted { color: var(--parchment-dim); }
+    .lede { font-size: 1.15rem; max-width: 40rem; }
+    .center { text-align: center; }
+    .center .lede { margin-left: auto; margin-right: auto; }
+
+    header.nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(10, 20, 15, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid rgba(217, 173, 85, 0.3);
+    }
+    header.nav .inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      min-height: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: var(--parchment);
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.85rem;
+    }
+    .brand-mark {
+      width: 1.75rem;
+      height: 1.75rem;
+      background: var(--ember);
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 0.35rem 1.1rem;
+      margin: 0;
+      padding: 0.75rem 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    nav a {
+      color: var(--parchment-dim);
+      text-decoration: none;
+    }
+    nav a:hover, nav a.current { color: var(--parchment); }
+
+    .tool {
+      margin-bottom: 1rem;
+      padding: 1.2rem 1.35rem;
+      background: #12201a;
+      border: 1px solid rgba(217, 173, 85, 0.3);
+    }
+    .tool h3 {
+      font-size: 1rem;
+      margin: 0 0 0.4rem;
+      color: var(--gold);
+    }
+    .tool p { margin: 0; color: var(--parchment-dim); font-size: 0.95rem; }
+    .phase {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.65rem;
+      margin: 2rem 0 0.9rem;
+    }
+    .phase.p1 { color: var(--ember); }
+    .phase.p2 { color: var(--earth); }
+    .phase.p3 { color: var(--ice); }
+    .note-box {
+      margin-top: 1.5rem;
+      padding: 1.6rem 1.8rem;
+      background: #0f1a15;
+      border: 2px solid rgba(205, 191, 159, 0.3);
+      text-align: center;
+    }
+    .note-box h3 {
+      font-family: "Press Start 2P", monospace;
+      font-size: 0.75rem;
+      margin: 0 0 0.75rem;
+      color: var(--parchment);
+    }
+    .note-box p {
+      margin: 0 auto;
+      max-width: 40rem;
+      color: var(--parchment-dim);
+    }
+
+    footer {
+      border-top: 2px solid rgba(217, 173, 85, 0.2);
+      background: var(--forest-deep);
+      padding: 2rem 1.25rem;
+    }
+    footer .inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    footer p { margin: 0; font-size: 0.85rem; color: var(--parchment-dim); }
+    footer a { color: var(--parchment-dim); text-decoration: none; }
+    footer a:hover { color: var(--parchment); }
+
+    @media (max-width: 560px) {
+      nav ul { font-size: 0.8rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="inner">
+      <a class="brand" href="../">
+        <span class="brand-mark pixel-corners"></span>
+        CHOPPER
+      </a>
+      <nav>
+        <ul>
+          <li><a href="../#game">The game</a></li>
+          <li><a href="../#loop">Day and night</a></li>
+          <li><a href="../#map">Map</a></li>
+          <li><a href="../#status">Status</a></li>
+          <li><a href="toolkit.html" class="current">Tools</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section" id="toolkit">
+    <div class="wrap">
+      <div class="center">
+        <p class="kicker">ART AND DEVELOPMENT TOOLKIT</p>
+        <h2>How the look gets made</h2>
+        <p class="lede">Chopper starts as a crisp 2D pixel game. Later looks can move into voxel 3D, then into low-poly 3D if that ever becomes the right call. The tools below are what that path actually uses.</p>
+      </div>
+
+      <p class="phase p1">PHASE 1: 2D PIXEL ART</p>
+      <p class="muted">Walk cycles, item icons, and tilesets need software that treats pixels as pixels and does not blur them.</p>
+      <div class="tool pixel-corners">
+        <h3><a href="https://www.aseprite.org/" target="_blank" rel="noopener">Aseprite</a></h3>
+        <p>The usual tool for 2D pixel art and animation. Timeline for frame by frame walk cycles, palette swapping, and sprite sheet export. Paid, or free if you compile it from source.</p>
+      </div>
+      <div class="tool pixel-corners">
+        <h3><a href="https://libresprite.github.io/" target="_blank" rel="noopener">LibreSprite</a></h3>
+        <p>A free, open source fork of an older Aseprite. The interface is older, but layers and animation are enough for the first pass.</p>
+      </div>
+
+      <p class="phase p2">PHASE 2: VOXEL 3D</p>
+      <p class="muted">If the game ever takes a blocky 3D pass, voxels are the short step from 2D sprites. No traditional mesh modeling required.</p>
+      <div class="tool pixel-corners">
+        <h3><a href="https://ephtracy.github.io/" target="_blank" rel="noopener">MagicaVoxel</a></h3>
+        <p>Free voxel editor and renderer. Tree elementals can be built from blocks, colored with a pixel palette, and animated frame by frame.</p>
+      </div>
+      <div class="tool pixel-corners">
+        <h3><a href="https://www.blockbench.net/" target="_blank" rel="noopener">Blockbench</a></h3>
+        <p>Free low-poly and voxel modeler. Good for boxy characters, like a lumberjack, and for simple skeleton rigs.</p>
+      </div>
+
+      <p class="phase p3">PHASE 3: LOW-POLY 3D</p>
+      <p class="muted">A later look could use simple 3D models with low resolution pixel textures and stronger lighting. That needs a full 3D suite.</p>
+      <div class="tool pixel-corners">
+        <h3>Blender</h3>
+        <p>Free, open source 3D suite. Model a low-poly lumberjack and trees, unwrap them, and animate them on armatures. Paint the pixel bark and leaves in Aseprite, then map those textures back onto the models.</p>
+      </div>
+
+      <div class="note-box pixel-corners">
+        <h3>ASSET NOTES</h3>
+        <p>Custom art gets mixed with modified free assets. <a href="https://itch.io/game-assets/free" target="_blank" rel="noopener">Itch.io</a> and <a href="https://opengameart.org/" target="_blank" rel="noopener">OpenGameArt.org</a> are the usual sources. Import a sheet or a model, paint over the colors, and force everything onto one palette so the game still looks like one world.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="inner">
+      <a class="brand" href="../">
+        <span class="brand-mark pixel-corners"></span>
+        CHOPPER
+      </a>
+      <p><a href="../">Back to Chopper</a> · <a href="https://thurtea.com/">thurtea.com</a></p>
+    </div>
+  </footer>
+</body>
+</html>

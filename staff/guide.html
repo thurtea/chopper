@@ -1,0 +1,480 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta 
+charset="UTF-8"> <meta name="viewport" 
+content="width=device-width, initial-scale=1.0"> 
+<title>Unity Valheim Style Forest Chopping 
+Prototype Guide</title> <style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --accent: 
+    #5fb87a;
+    --accent2: #7aa6ff; --text: #e6e6e6; --muted: 
+    #9aa0ab;
+    --border: #2a2e37;
+  }
+  * { box-sizing: border-box; } body { margin: 0; 
+    font-family: "Segoe UI", Roboto, Helvetica, 
+    Arial, sans-serif; background: var(--bg); 
+    color: var(--text); line-height: 1.6;
+  }
+  .layout { display: flex; min-height: 100vh;
+  }
+  nav { width: 280px; background: var(--panel); 
+    border-right: 1px solid var(--border); 
+    padding: 24px 16px; position: sticky; top: 0; 
+    height: 100vh; overflow-y: auto; flex-shrink: 
+    0;
+  }
+  nav h2 { font-size: 14px; text-transform: 
+    uppercase; letter-spacing: 1px; color: 
+    var(--muted); margin: 20px 0 8px;
+  }
+  nav h2:first-child { margin-top: 0; } nav ul { 
+    list-style: none; padding: 0; margin: 0 0 8px;
+  }
+  nav li { margin: 4px 0; } nav a { color: 
+    var(--text); text-decoration: none; font-size: 
+    14px; display: block; padding: 6px 10px; 
+    border-radius: 6px; transition: background 
+    0.15s;
+  }
+  nav a:hover { background: rgba(95,184,122,0.15); 
+    color: var(--accent);
+  }
+  main { flex: 1; padding: 40px 48px 80px; 
+    max-width: 900px;
+  }
+  header.hero { margin-bottom: 40px;
+  }
+  header.hero h1 { font-size: 32px; margin: 0 0 
+    8px;
+  }
+  header.hero p { color: var(--muted); font-size: 
+    16px; margin: 0;
+  }
+  .badge { display: inline-block; background: 
+    rgba(95,184,122,0.15); color: var(--accent); 
+    padding: 4px 12px; border-radius: 20px; 
+    font-size: 13px; margin-top: 14px;
+  }
+  section { margin-bottom: 48px; padding-top: 8px; 
+    border-top: 1px solid var(--border);
+  }
+  section:first-of-type { border-top: none; } h2 { 
+    font-size: 24px; color: var(--accent); 
+    margin-top: 24px; margin-bottom: 16px; 
+    scroll-margin-top: 20px;
+  }
+  h3 { font-size: 18px; color: var(--accent2); 
+    margin-top: 28px; margin-bottom: 10px; 
+    scroll-margin-top: 20px;
+  }
+  p { margin: 10px 0; } ul, ol { padding-left: 
+    22px;
+  }
+  li { margin: 8px 0; } a.link { color: 
+    var(--accent2); text-decoration: none; 
+    border-bottom: 1px dashed 
+    rgba(122,166,255,0.4);
+  }
+  a.link:hover { border-bottom-color: 
+  var(--accent2); } .card {
+    background: var(--panel); border: 1px solid 
+    var(--border); border-radius: 10px; padding: 
+    16px 20px; margin: 14px 0;
+  }
+  .card strong { color: var(--text); } .tag { 
+    display: inline-block; font-size: 12px; 
+    background: rgba(122,166,255,0.15); color: 
+    var(--accent2); padding: 2px 10px; 
+    border-radius: 12px; margin-bottom: 8px;
+  }
+  .tag.priority { background: 
+    rgba(95,184,122,0.2); color: var(--accent);
+  }
+  .steps-grid { counter-reset: step-counter; 
+    list-style: none; padding-left: 0;
+  }
+  .steps-grid li { counter-increment: 
+    step-counter; position: relative; 
+    padding-left: 42px; margin-bottom: 14px;
+  }
+  .steps-grid li::before { content: 
+    counter(step-counter); position: absolute; 
+    left: 0; top: 0; width: 28px; height: 28px; 
+    background: var(--accent); color: #0f1115; 
+    font-weight: bold; border-radius: 50%; 
+    display: flex; align-items: center; 
+    justify-content: center; font-size: 14px;
+  }
+  table { width: 100%; border-collapse: collapse; 
+    margin: 16px 0;
+  }
+  th, td { text-align: left; padding: 10px 12px; 
+    border-bottom: 1px solid var(--border); 
+    font-size: 15px;
+  }
+  th { color: var(--muted); text-transform: 
+    uppercase; font-size: 12px; letter-spacing: 
+    0.5px;
+  }
+  .back-to-top { display: inline-block; 
+    margin-top: 12px; font-size: 13px; color: 
+    var(--muted); text-decoration: none;
+  }
+  .back-to-top:hover { color: var(--accent); } 
+  footer {
+    color: var(--muted); font-size: 13px; 
+    border-top: 1px solid var(--border); 
+    padding-top: 20px;
+  }
+  @media (max-width: 800px) { .layout { 
+    flex-direction: column; } nav { width: 100%; 
+    height: auto; position: relative; } main { 
+    padding: 24px; }
+  }
+</style> </head> <body> <div class="layout"> <nav 
+id="top">
+  <h2>Overview</h2> <ul> <li><a 
+    href="#intro">Introduction</a></li> <li><a 
+    href="#prerequisites">Prerequisites</a></li> 
+    <li><a href="#outline">Project 
+    Outline</a></li>
+  </ul> <h2>Resources</h2> <ul> <li><a 
+    href="#tools-platforms">Tools and Platforms</a></li>
+    <li><a href="#nature-packs">Nature and Trees</a></li> 
+    <li><a href="#player-controllers">Player 
+    Controllers</a></li> <li><a 
+    href="#chopping">Tree Chopping and 
+    Physics</a></li> <li><a href="#github">GitHub 
+    Examples</a></li> <li><a 
+    href="#enemies">Enemies</a></li> <li><a 
+    href="#sound">Sound and Feel</a></li> <li><a 
+    href="#paid">Paid Options</a></li>
+  </ul> <h2>Getting Started</h2> <ul> <li><a 
+    href="#download-order">Recommended Download 
+    Order</a></li> <li><a href="#next-steps">Next 
+    Steps</a></li>
+  </ul> <h2>Video Tutorials</h2> <ul> <li><a 
+    href="#must-watch">Must Watch</a></li> <li><a 
+    href="#supporting-videos">Supporting 
+    Videos</a></li> <li><a href="#video-tips">How 
+    To Use These Videos</a></li>
+  </ul> </nav> <main> <header class="hero" 
+  id="intro">
+    <h1>Building a Valheim Style Forest Chopping 
+    Prototype in Unity</h1> <p>A clean, structured 
+    guide for getting an open field with fellable 
+    trees and a weighty player controller running 
+    in Unity, using mostly free resources.</p> 
+    <span class="badge">Budget: free first, up to 
+    30 CAD (22 USD) if worth it</span>
+  </header> <section id="prerequisites"> 
+    <h2>Prerequisites</h2> <ul>
+      <li>Unity Hub with Unity 6 LTS (or the 
+      latest LTS) installed, including the 
+      Universal Render Pipeline (URP) module.</li> 
+      <li>Create a new project using the Universal 
+      3D template.</li> <li>Basic familiarity with 
+      the Unity Editor: Hierarchy, Inspector, 
+      Project window, and Play mode. Existing 
+      coding experience means C# will click 
+      fast.</li> <li>Optional but recommended: 
+      Visual Studio or VS Code with the Unity 
+      extension, plus a free GitHub account for 
+      cloning example repos.</li> <li>A mouse and 
+      keyboard. First person or third person both 
+      work, and Valheim uses first person.</li>
+    </ul> <p>That is it. No paid tools are 
+    required to start.</p>
+  </section> <section id="outline"> <h2>Project 
+    Outline: What We Are Building First</h2> <ol 
+    class="steps-grid">
+      <li>Open field or basic terrain, using a 
+      Plane or Unity Terrain.</li> <li>Place three 
+      to twenty trees that look decent and have 
+      colliders.</li> <li>A player controller that 
+      can walk and look around with some weight, 
+      meaning acceleration instead of instant 
+      movement.</li> <li>Simple chopping: left 
+      click or attack hits a tree, its health goes 
+      down, and the tree falls or disappears with 
+      physics and feedback.</li> <li>A basic game 
+      feel layer, such as hit stop, screen shake, 
+      sound, and particles, so it already feels 
+      satisfying.</li> <li>Next sessions: day and 
+      night cycle, elemental variants, and enemies 
+      that path to a hut.</li>
+    </ol> <p><strong>Goal for the first solid 
+    session:</strong> walk around a small forest 
+    clearing and chop trees that react with 
+    weight.</p>
+  </section> <section id="tools-platforms">
+    <h2>Peer Recommended Tools and Platforms</h2>
+    <p>These recommendations support the prototype workflow without changing the core goal: build and test the game in a desktop engine, then use focused art tools where they help.</p>
+    <h3>Aseprite Plugins for Pixel-Art Work</h3>
+    <div class="card">
+      <p><strong>Time Tracking for Aseprite</strong></p>
+      <p><a class="link" 
+      href="https://thkaspar.itch.io/time-tracking-for-aseprite" 
+      target="_blank" rel="noopener">thkaspar.itch.io/time-tracking-for-aseprite</a></p>
+      <p>Collects work-time data locally. Useful for seeing how long individual sprite, UI, or asset tasks actually take.</p>
+    </div> <div class="card">
+      <p><strong>Isometric Box Generator for Aseprite</strong></p>
+      <p><a class="link"
+      href="https://darkwark.itch.io/isobox-for-aseprite"
+      target="_blank" rel="noopener">darkwark.itch.io/isobox-for-aseprite</a></p>
+      <p>Creates boxes in different sizes, which can speed up blockouts and isometric props when experimenting with a pixel-art direction.</p>
+    </div> <div class="card">
+      <p><strong>Colors To Layers</strong></p>
+      <p><a class="link"
+      href="https://oakgc.itch.io/colors-to-layers"
+      target="_blank" rel="noopener">oakgc.itch.io/colors-to-layers</a></p>
+      <p>Organizes paint layers, ranges, and groups using predefined or custom colors. Useful for keeping character parts, effects, and variations easy to edit.</p>
+    </div>
+    <h3>Platform Direction</h3>
+    <table>
+      <thead>
+        <tr><th>Platform</th><th>Recommended Direction</th></tr>
+      </thead> <tbody>
+        <tr><td>Windows or macOS</td><td>Use Unity for this 3D Valheim-style prototype. It matches the guide's existing URP, Starter Assets, and tree-physics resources.</td></tr>
+        <tr><td>Windows</td><td>Godot is a strong alternative when a lighter, open-source engine or a different workflow is preferred. Choose one engine for the first prototype rather than rebuilding the same features twice.</td></tr>
+        <tr><td>Linux</td><td>Best suited here for back-end and server work, such as MMO server infrastructure, services, databases, automation, and deployment. Keep the first playable client focused on the desktop engine workflow above.</td></tr>
+      </tbody>
+    </table>
+  </section> <section id="nature-packs"> 
+    <h2>Resources: Downloads and Links</h2> 
+    <h3>Free Nature, Trees, and Ground (start 
+    here)</h3> <div class="card">
+      <span class="tag priority">Highest 
+      priority</span> <p><strong>KayKit Forest 
+      Nature Pack:</strong> <a class="link" 
+      href="https://kaylousberg.itch.io/kaykit-forest" 
+      target="_blank" 
+      rel="noopener">kaylousberg.itch.io/kaykit-forest</a></p> 
+      <p>Free tier includes over 100 stylized 
+      trees, rocks, bushes, and grass. CC0 
+      licensed. A perfectly consistent low poly 
+      look. Import the FBX or GLTF files into 
+      Unity.</p>
+    </div> <div class="card"> 
+      <p><strong>NatureForge FREE: Stylized Meadow 
+      and Farm Kit</strong> (Unity Asset 
+      Store)</p> <p>Search "NatureForge FREE" or 
+      go via EmaceArt's page. Includes trees, 
+      rocks, foliage, terrain textures, LODs, and 
+      some collisions. Very usable straight out of 
+      the box.</p>
+    </div> <div class="card"> <p><strong>Polytope 
+      Studio Lowpoly Environment: Nature Pack 
+      Free</strong> (Unity Asset Store)</p> 
+      <p>Search the name directly. Includes trees 
+      (some harvesting ready), grass, rocks, and a 
+      basic water shader.</p>
+    </div> <div class="card"> <p><strong>Extra 
+      free trees if needed</strong></p> <p>Search 
+      the Asset Store for "Low Poly Trees Pack 
+      Lite" or similar free stylized packs.</p>
+    </div> </section> <section 
+  id="player-controllers">
+    <h3>Player Controllers (free)</h3> <div 
+    class="card">
+      <p><strong>Unity Starter Assets: First 
+      Person Controller</strong> (official, free 
+      on the Asset Store)</p> <p>Search "Starter 
+      Assets" then First Person. Clean and modern, 
+      uses the new Input System. Easy to expand 
+      for weight and acceleration.</p>
+    </div> <div class="card"> 
+      <p><strong>Alternative free 
+      options</strong></p> <p>"Easy Peasy First 
+      Person Controller" or any recent free URP 
+      compatible first person controller on the 
+      Asset Store.</p>
+    </div> </section> <section id="chopping"> 
+    <h2>Tree Chopping and Physics Examples</h2> 
+    <div class="card">
+      <span class="tag priority">Best tutorial and 
+      project files</span> <p><strong>Code Monkey: 
+      Tree Physics System like 
+      Valheim</strong></p> <p>Video: <a 
+      class="link" 
+      href="https://www.youtube.com/watch?v=ql4prUAasEg" 
+      target="_blank" 
+      rel="noopener">youtube.com/watch?v=ql4prUAasEg</a></p> 
+      <p>Project files: <a class="link" 
+      href="https://unitycodemonkey.com/video.php?v=ql4prUAasEg" 
+      target="_blank" 
+      rel="noopener">unitycodemonkey.com/video.php?v=ql4prUAasEg</a></p> 
+      <p>Shows exactly how to split a tree into a 
+      stump plus a falling log with physics, along 
+      with a damage interface. Still highly 
+      relevant today.</p>
+    </div> </section> <section id="github"> 
+    <h2>GitHub and Open Source Examples</h2> 
+    <p>Study the code in these types of 
+    repositories:</p> <ul>
+      <li>Search GitHub for "Unity tree chopping", 
+      "Unity survival", "lumberjack Unity", or 
+      "wood game Unity".</li> <li>Repositories 
+      implementing tree cutting and physics, such 
+      as variations of "Wood Game" or similar 
+      lumberjack prototypes.</li> <li>Broader 
+      survival prototypes with inventory, day and 
+      night, and AI systems that you can strip 
+      down for reference.</li> <li>Code Monkey's 
+      site often has downloadable project files 
+      that act like mini repositories.</li>
+    </ul> <div class="card"> <p><strong>General 
+      tip:</strong> clone small projects, open 
+      them in the same Unity version (or upgrade 
+      carefully), and study the tree health, 
+      raycast, and Rigidbody fall logic.</p>
+    </div> </section> <section id="enemies"> 
+    <h2>Enemies: Tree Spirits and Nature Monsters 
+    (free first)</h2> <ul>
+      <li>Search the Asset Store or itch.io for 
+      "plant monster", "mushroom monster", 
+      "fantasy enemy pack free", or "low poly 
+      nature enemy".</li> <li>Meshtint style 
+      fantasy enemy packs often include free or 
+      cheap plant, flower, or mushroom creatures 
+      you can recolor as elemental tree 
+      spirits.</li> <li>For pure tree enemies, 
+      start with a KayKit or NatureForge tree, add 
+      simple arm meshes or use an Animator plus a 
+      NavMeshAgent, and swap materials for an 
+      elemental glow.</li>
+    </ul> </section> <section id="sound"> 
+    <h2>Sound and Feel (free)</h2> <ul>
+      <li>Free sound packs on the Asset Store: 
+      search "wood chop", "tree fall", or "forest 
+      ambient". Freesound.org is another good 
+      source.</li> <li>Particles: Unity's built in 
+      Particle System is enough for wood chips or 
+      a leaf burst. Free VFX packs exist if more 
+      polish is wanted.</li>
+    </ul> </section> <section id="paid"> <h2>Paid 
+    Options (only if free is not enough, stay 
+    under 30 CAD)</h2> <ul>
+      <li>KayKit Extra tier, which adds more trees 
+      and modular terrain, usually cheap.</li> 
+      <li>A single high quality stylized tree or 
+      nature expansion pack on the Asset Store 
+      during a sale.</li> <li>A polished first 
+      person controller or combat feel pack if the 
+      free ones feel too floaty.</li> <li>Do not 
+      buy character models yet. Any capsule or 
+      free humanoid is fine for now.</li>
+    </ul> </section> <section id="download-order"> 
+    <h2>Recommended Download Order (do this 
+    today)</h2> <ol class="steps-grid">
+      <li>KayKit Forest Nature Pack (free 
+      tier).</li> <li>NatureForge FREE or the 
+      Polytope free nature pack.</li> <li>Unity 
+      Starter Assets: First Person 
+      Controller.</li> <li>Code Monkey tree 
+      physics project files, for reference 
+      scripts.</li> <li>A couple of free wood chop 
+      or forest ambient sound packs.</li>
+    </ol> </section> <section id="next-steps"> 
+    <h2>Next Steps</h2> <p>Import everything into 
+    the URP project, create a Terrain or a large 
+    Plane, scatter trees, drop the player 
+    controller in, and wire up a basic raycast 
+    plus a Tree health script.</p> <p>Once the 
+    packs are imported and there is a scene with 
+    ground, trees, and a moving player, note 
+    exactly what is in place and where things get 
+    stuck, such as import issues, a raycast not 
+    hitting, or trees not falling. From there the 
+    chopping and weighty feel can be built step by 
+    step.</p> <div class="card">
+      <p>This setup allows for real progress 
+      without spending anything yet. Grab KayKit 
+      and the Starter Assets first. Those two 
+      alone provide a solid base.</p>
+    </div> </section> <section id="must-watch"> 
+    <h2>Video Tutorials</h2> <p>A short, focused 
+    list of videos that are actually useful for 
+    this exact project: open field, trees, and 
+    chopping with weight.</p> <h3>Must Watch, 
+    Highest Value</h3> <div class="card">
+      <p><strong>1. Code Monkey: Tree Physics 
+      System like Valheim</strong> (about 13 
+      minutes)</p> <p><a class="link" 
+      href="https://www.youtube.com/watch?v=ql4prUAasEg" 
+      target="_blank" 
+      rel="noopener">youtube.com/watch?v=ql4prUAasEg</a></p> 
+      <p>The single best video for the exact 
+      "chop, tree splits, log falls with physics, 
+      can knock other trees" feel. It covers the 
+      interface, prefab setup, and Rigidbody fall. 
+      Project files are available on 
+      unitycodemonkey.com. Even watching only the 
+      first half while coding along is worth 
+      it.</p>
+    </div> <div class="card"> <p><strong>2. How to 
+      Chop Down Trees in Unity 6</strong> by 
+      Digvijaysinh Gohil (about 2 hours, starts 
+      from a clean URP project)</p> <p><a 
+      class="link" 
+      href="https://www.youtube.com/watch?v=BKG_RoDA6uQ" 
+      target="_blank" 
+      rel="noopener">youtube.com/watch?v=BKG_RoDA6uQ</a></p> 
+      <p>Covers a first person controller, picking 
+      up a hatchet, multi hit chopping, tree 
+      falling direction, spawning logs and 
+      branches, pickup, audio, particles, and 
+      decals. A more complete survival style 
+      chopping loop than most. Chapters allow 
+      skipping around.</p>
+    </div> </section> <section 
+  id="supporting-videos">
+    <h3>Supporting Videos (watch only the parts 
+    needed)</h3> <ul>
+      <li><strong>Creating a realistic or stylized 
+      forest in Unity URP.</strong> Search YouTube 
+      for "Unity URP forest terrain trees" or "How 
+      to create a REALISTIC FOREST in UNITY, For 
+      Beginners, URP". Good for terrain setup, 
+      painting textures, mass placing trees and 
+      grass, and basic lighting and fog so the 
+      open field does not look empty.</li> 
+      <li><strong>Unity Starter Assets First 
+      Person Controller setup videos.</strong> 
+      Search "Unity Starter Assets First Person 
+      Controller URP". Official or community 
+      videos show how to drop it in and get 
+      walking and looking working in five to ten 
+      minutes.</li> <li><strong>Spanish language 
+      alternative:</strong> "Tala de arboles con 
+      fisicas (VALHEIM style) en Unity 3d" by Gius 
+      Caminiti. Shorter and focused on the same 
+      physics chop system.</li>
+    </ul> </section> <section id="video-tips"> 
+    <h3>How to Use These Videos</h3> <table>
+      <thead> 
+        <tr><th>Situation</th><th>Recommendation</th></tr>
+      </thead> <tbody> <tr><td>Want the core 
+        chopping and physics feel</td><td>Start 
+        with the Code Monkey video</td></tr> 
+        <tr><td>Want the full pick up axe, chop, 
+        collect logs loop</td><td>Use the longer 
+        Unity 6 chopping video</td></tr> 
+        <tr><td>No interactive trees 
+        yet</td><td>Skip pure "make a pretty 
+        forest" videos until chopping works, since 
+        pretty trees that cannot be interacted 
+        with are less motivating</td></tr>
+      </tbody> </table> <p>Most of these still 
+    work fine in current Unity 6 and URP even if a 
+    video is a bit older. The core principles, 
+    such as a raycast or trigger hit, health on 
+    the tree, swapping to a fallen prefab with a 
+    Rigidbody, and hit stop or screen shake, have 
+    not changed.</p> <a class="back-to-top" 
+    href="#top">Back to top of navigation</a>
+  </section> <footer> Guide compiled for a 3D 
+    Valheim and EthrA style prototype in Unity: 
+    open field, fellable trees, and a weighty 
+    player feel.
+  </footer> </main> </div> </body> </html>

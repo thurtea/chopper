@@ -1,0 +1,41 @@
+; Engine configuration file.
+; Godot 4.3+ — the editor will bump the feature tag if you open this in a newer 4.x.
+
+config_version=5
+
+[application]
+
+config/name="ChopperMobile"
+config/description="Little Chopper swings his axe and chops down trees."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.3", "Mobile")
+config/icon="res://icon.svg"
+
+[autoload]
+
+GameState="*res://autoload/game_state.gd"
+
+[gui]
+
+theme/custom="res://assets/themes/chopper_theme.tres"
+
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/size/window_width_override=405
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"
+textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_etc2_astc=true

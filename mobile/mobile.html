@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chopper & Choppette Mobile - Clicker Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #d4af37 0%, #f4e4bc 50%, #d4af37 100%);
+            color: #333;
+            line-height: 1.4;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .mobile-frame {
+            max-width: 414px;
+            margin: 20px auto;
+            background: #000;
+            border-radius: 30px;
+            padding: 10px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .screen {
+            background: linear-gradient(135deg, #87CEEB 0%, #90EE90 100%);
+            border-radius: 20px;
+            /* FIXED: Use viewport height instead of fixed height */
+            height: calc(100vh - 40px);
+            max-height: 736px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            background: rgba(0,0,0,0.1);
+            height: 44px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .game-header {
+            background: rgba(139, 69, 19, 0.9);
+            color: #ffd700;
+            text-align: center;
+            /* FIXED: Responsive padding */
+            padding: clamp(8px, 3vw, 15px);
+            border-bottom: 3px solid #8b4513;
+            flex-shrink: 0;
+        }
+
+        .game-header h1 {
+            /* FIXED: Responsive font size */
+            font-size: clamp(18px, 4vw, 24px);
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .game-header .subtitle {
+            /* FIXED: Responsive font size */
+            font-size: clamp(10px, 2.5vw, 12px);
+            color: #f4e4bc;
+        }
+
+        .main-game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            /* FIXED: Reduced padding on small screens */
+            padding: clamp(8px, 3vw, 15px);
+            min-height: 0; /* Important for flex shrinking */
+        }
+
+        .stats-bar {
+            background: rgba(139, 69, 19, 0.2);
+            border-radius: 15px;
+            /* FIXED: Responsive padding */
+            padding: clamp(8px, 2.5vw, 12px);
+            margin-bottom: clamp(8px, 3vw, 15px);
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: clamp(4px, 2vw, 8px);
+            text-align: center;
+            border: 2px solid #8b4513;
+            flex-shrink: 0;
+        }
+
+        .stat-item {
+            background: rgba(0,0,0,0.1);
+            /* FIXED: Responsive padding */
+            padding: clamp(4px, 1.5vw, 8px) clamp(2px, 1vw, 4px);
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            /* FIXED: Responsive font size */
+            font-size: clamp(14px, 4vw, 18px);
+            font-weight: bold;
+            color: #8b4513;
+        }
+
+        .stat-label {
+            /* FIXED: Responsive font size */
+            font-size: clamp(8px, 2vw, 10px);
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .tree-area {
+            flex: 1;
+            background: rgba(0,0,0,0.05);
+            border-radius: 15px;
+            margin-bottom: clamp(8px, 3vw, 15px);
+            position: relative;
+            overflow: hidden;
+            /* FIXED: Responsive min-height based on available space */
+            min-height: clamp(200px, 35vh, 300px);
+            border: 2px solid #8b4513;
+        }
+
+        .tree-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .main-tree {
+            /* FIXED: Responsive tree size */
+            width: clamp(80px, 20vw, 120px);
+            height: clamp(100px, 25vw, 160px);
+            margin: 0 auto;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .main-tree:active {
+            transform: scale(0.95);
+        }
+
+        .tree-trunk {
+            /* FIXED: Responsive trunk size */
+            width: clamp(12px, 3vw, 20px);
+            height: clamp(36px, 9vw, 60px);
+            background: #8b4513;
+            margin: 0 auto;
+            border-radius: 5px;
+        }
+
+        .tree-crown {
+            /* FIXED: Responsive crown size */
+            width: clamp(60px, 15vw, 100px);
+            height: clamp(60px, 15vw, 100px);
+            border-radius: 50%;
+            margin: clamp(-12px, -3vw, -20px) auto 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .tree-crown.normal { background: #228B22; }
+        .tree-crown.fire { background: linear-gradient(45deg, #ff4444, #cc3333); }
+        .tree-crown.ice { background: linear-gradient(45deg, #4da6ff, #0080ff); }
+        .tree-crown.lightning { background: linear-gradient(45deg, #ffff00, #cccc00); }
+        .tree-crown.earth { background: linear-gradient(45deg, #8b7355, #654321); }
+        .tree-crown.wind { background: linear-gradient(45deg, #00ff80, #00cc66); }
+
+        .tree-health {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            /* FIXED: Responsive health bar */
+            width: clamp(50px, 12vw, 80px);
+            height: clamp(6px, 1.5vw, 8px);
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444, #ffff00, #44ff44);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .tree-level {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(139, 69, 19, 0.9);
+            color: #ffd700;
+            /* FIXED: Responsive padding and font */
+            padding: clamp(1px, 0.5vw, 2px) clamp(4px, 2vw, 8px);
+            border-radius: 10px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            font-weight: bold;
+        }
+
+        .tap-indicator {
+            position: absolute;
+            color: #ffd700;
+            /* FIXED: Responsive font size */
+            font-size: clamp(16px, 4vw, 20px);
+            font-weight: bold;
+            pointer-events: none;
+            animation: float-up 1s ease-out forwards;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        @keyframes float-up {
+            0% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -50px); }
+        }
+
+        .particle {
+            position: absolute;
+            /* FIXED: Responsive particle size */
+            width: clamp(4px, 1vw, 6px);
+            height: clamp(4px, 1vw, 6px);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle-burst 0.8s ease-out forwards;
+        }
+
+        @keyframes particle-burst {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0) translate(var(--dx), var(--dy)); }
+        }
+
+        .bottom-ui {
+            background: rgba(139, 69, 19, 0.9);
+            border-radius: 15px 15px 0 0;
+            /* FIXED: Responsive padding */
+            padding: clamp(8px, 3vw, 15px);
+            color: #f4e4bc;
+            border: 2px solid #8b4513;
+            border-bottom: none;
+            flex-shrink: 0;
+        }
+
+        .element-selection {
+            margin-bottom: clamp(8px, 3vw, 15px);
+        }
+
+        .element-title {
+            text-align: center;
+            color: #ffd700;
+            /* FIXED: Responsive font size */
+            font-size: clamp(12px, 3vw, 14px);
+            font-weight: bold;
+            margin-bottom: clamp(6px, 2vw, 10px);
+        }
+
+        .element-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: clamp(3px, 1vw, 5px);
+        }
+
+        .element-btn {
+            /* FIXED: Responsive button size */
+            width: clamp(35px, 8vw, 45px);
+            height: clamp(35px, 8vw, 45px);
+            border: none;
+            border-radius: 50%;
+            /* FIXED: Responsive font size */
+            font-size: clamp(8px, 2vw, 10px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .element-btn:active {
+            transform: scale(0.9);
+        }
+
+        .element-btn.active {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+
+        .element-btn.fire { background: linear-gradient(45deg, #ff4444, #cc3333); color: white; }
+        .element-btn.ice { background: linear-gradient(45deg, #4da6ff, #0080ff); color: white; }
+        .element-btn.lightning { background: linear-gradient(45deg, #ffff00, #cccc00); color: #333; }
+        .element-btn.earth { background: linear-gradient(45deg, #8b7355, #654321); color: white; }
+        .element-btn.wind { background: linear-gradient(45deg, #00ff80, #00cc66); color: #333; }
+
+        .upgrades-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(6px, 2vw, 10px);
+        }
+
+        .upgrade-btn {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: white;
+            border: none;
+            /* FIXED: Responsive padding and font */
+            padding: clamp(8px, 2.5vw, 12px) clamp(4px, 1.5vw, 8px);
+            border-radius: 10px;
+            font-size: clamp(9px, 2.2vw, 11px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .upgrade-btn:active {
+            transform: scale(0.95);
+        }
+
+        .upgrade-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .upgrade-cost {
+            display: block;
+            /* FIXED: Responsive font size */
+            font-size: clamp(8px, 2vw, 10px);
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        .floating-numbers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .auto-chopper {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            /* FIXED: Responsive auto-chopper size */
+            width: clamp(20px, 5vw, 30px);
+            height: clamp(26px, 6.5vw, 40px);
+            background: #8b4513;
+            border-radius: 5px;
+            animation: chop-animation 2s infinite;
+        }
+
+        @keyframes chop-animation {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            75% { transform: rotate(15deg); }
+        }
+
+        .prestige-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(45deg, #9370DB, #8A2BE2);
+            color: white;
+            /* FIXED: Responsive padding and font */
+            padding: clamp(2px, 1vw, 4px) clamp(4px, 2vw, 8px);
+            border-radius: 15px;
+            font-size: clamp(8px, 2vw, 10px);
+            font-weight: bold;
+        }
+
+        /* Desktop Responsive Design */
+        @media (min-width: 768px) {
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            .mobile-frame {
+                margin: 0;
+                flex-shrink: 0;
+            }
+
+            .screen {
+                height: 736px; /* Fixed height on desktop */
+            }
+
+            .desktop-info {
+                max-width: 500px;
+                margin-left: 40px;
+                background: rgba(139, 69, 19, 0.1);
+                padding: 30px;
+                border-radius: 20px;
+                border: 2px solid #8b4513;
+            }
+
+            .desktop-info h2 {
+                color: #8b4513;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #8b4513;
+                padding-bottom: 10px;
+            }
+
+            .feature-list {
+                list-style: none;
+                padding: 0;
+            }
+
+            .feature-list li {
+                margin: 15px 0;
+                padding: 10px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 8px;
+                border-left: 4px solid #ff6b35;
+            }
+
+            .feature-list strong {
+                color: #8b4513;
+            }
+        }
+
+        /* Mobile-only styles */
+        @media (max-width: 767px) {
+            .mobile-frame {
+                margin: 0;
+                max-width: none;
+                border-radius: 0;
+                background: transparent;
+                padding: 0;
+                box-shadow: none;
+            }
+
+            .screen {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .desktop-info {
+                display: none;
+            }
+        }
+
+        /* ADDED: Specific fixes for very small screens (iPod Touch, etc.) */
+        @media (max-width: 340px) {
+            .upgrades-section {
+                grid-template-columns: 1fr; /* Single column on very small screens */
+                gap: 4px;
+            }
+
+            .element-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 2px;
+            }
+
+            .element-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 7px;
+            }
+        }
+
+        /* ADDED: Landscape orientation fixes for small screens */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .tree-area {
+                min-height: 150px;
+            }
+
+            .main-tree {
+                width: 60px;
+                height: 80px;
+            }
+
+            .tree-crown {
+                width: 50px;
+                height: 50px;
+            }
+
+            .tree-trunk {
+                width: 10px;
+                height: 30px;
+            }
+
+            .game-header {
+                padding: 5px;
+            }
+
+            .game-header h1 {
+                font-size: 16px;
+            }
+
+            .main-game-area {
+                padding: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-frame">
+        <div class="screen">
+            <div class="game-header">
+                <h1>CHOPPER & CHOPPETTE</h1>
+                <p class="subtitle">Mobile Clicker Edition</p>
+            </div>
+
+            <div class="main-game-area">
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalChops">0</div>
+                        <div class="stat-label">Total Chops</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="chopsPerSec">0</div>
+                        <div class="stat-label">Per Second</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="treeLevel">1</div>
+                        <div class="stat-label">Tree Level</div>
+                    </div>
+                </div>
+
+                <div class="tree-area">
+                    <div class="prestige-indicator">⭐ Prestige 0</div>
+                    
+                    <div class="tree-container">
+                        <div class="main-tree" id="mainTree" onclick="chopTree()">
+                            <div class="tree-level" id="treeLevelDisplay">Lv. 1</div>
+                            <div class="tree-health">
+                                <div class="health-fill" id="healthFill" style="width: 100%"></div>
+                            </div>
+                            <div class="tree-crown normal" id="treeCrown"></div>
+                            <div class="tree-trunk"></div>
+                        </div>
+                    </div>
+
+                    <div class="auto-chopper" id="autoChopper" style="display: none;"></div>
+                    <div class="floating-numbers" id="floatingNumbers"></div>
+                </div>
+
+                <div class="bottom-ui">
+                    <div class="element-selection">
+                        <div class="element-title">Elemental Axe</div>
+                        <div class="element-buttons">
+                            <button class="element-btn fire" onclick="selectElement('fire')">FIRE</button>
+                            <button class="element-btn ice" onclick="selectElement('ice')">ICE</button>
+                            <button class="element-btn lightning" onclick="selectElement('lightning')">BOLT</button>
+                            <button class="element-btn earth" onclick="selectElement('earth')">EARTH</button>
+                            <button class="element-btn wind" onclick="selectElement('wind')">WIND</button>
+                        </div>
+                    </div>
+
+                    <div class="upgrades-section">
+                        <button class="upgrade-btn" id="axeUpgrade" onclick="buyUpgrade('axe')">
+                            Better Axe
+                            <span class="upgrade-cost">Cost: <span id="axeCost">10</span></span>
+                        </button>
+                        <button class="upgrade-btn" id="autoChopUpgrade" onclick="buyUpgrade('auto')">
+                            Auto Chopper
+                            <span class="upgrade-cost">Cost: <span id="autoCost">100</span></span>
+                        </button>
+                        <button class="upgrade-btn" id="elementUpgrade" onclick="buyUpgrade('element')">
+                            Element Power
+                            <span class="upgrade-cost">Cost: <span id="elementCost">50</span></span>
+                        </button>
+                        <button class="upgrade-btn" id="prestigeUpgrade" onclick="prestige()" style="background: linear-gradient(45deg, #9370DB, #8A2BE2);">
+                            Prestige Reset
+                            <span class="upgrade-cost">Unlocks at 1000</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Info Panel -->
+    <div class="desktop-info" style="display: none;">
+        <h2>Mobile Clicker Features</h2>
+        <ul class="feature-list">
+            <li><strong>Idle Progression:</strong> Trees regrow automatically, perfect for mobile sessions</li>
+            <li><strong>Elemental Axes:</strong> Collect different elements for bonus damage and effects</li>
+            <li><strong>Auto-Choppers:</strong> Purchase AI helpers that chop trees while you're away</li>
+            <li><strong>Prestige System:</strong> Reset progress for permanent bonuses and new content</li>
+            <li><strong>Tree Evolution:</strong> Higher level trees drop better rewards and essences</li>
+            <li><strong>Gacha Elements:</strong> Rare elemental drops with special visual effects</li>
+            <li><strong>Daily Challenges:</strong> Special objectives for premium currency rewards</li>
+            <li><strong>Seasonal Events:</strong> Limited-time trees with exclusive cosmetic rewards</li>
+            <li><strong>Cloud Save:</strong> Sync progress between devices and PC version</li>
+        </ul>
+    </div>
+
+    <script>
+    // Audio helpers (WebAudio fallback)
+    let audioCtx = null;
+    function ensureAudio(){ if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx = null; } } }
+    function playChop(){ if(!audioCtx) return; const now = audioCtx.currentTime; const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(520, now); g.gain.setValueAtTime(0.18, now); g.gain.exponentialRampToValueAtTime(0.001, now+0.12); o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now+0.12); }
+    function playFall(){ if(!audioCtx) return; const now = audioCtx.currentTime; const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = 'square'; o.frequency.setValueAtTime(160, now); g.gain.setValueAtTime(0.28, now); g.gain.exponentialRampToValueAtTime(0.001, now+0.28); o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now+0.28); }
+
+    // Resume audio on first user gesture for mobile browsers
+    document.addEventListener('pointerdown', function resumeAudio(){ ensureAudio(); if(audioCtx && audioCtx.state === 'suspended'){ audioCtx.resume().catch(()=>{}); } document.removeEventListener('pointerdown', resumeAudio); }, { once:true });
+
+        let gameState = {
+            totalChops: 0,
+            chopsPerSecond: 0,
+            chopsPerClick: 1,
+            treeLevel: 1,
+            treeHealth: 100,
+            maxTreeHealth: 100,
+            currentElement: 'normal',
+            elementPower: 1,
+            autoChoppers: 0,
+            prestigeLevel: 0,
+            upgrades: {
+                axe: 0,
+                auto: 0,
+                element: 0
+            },
+            costs: {
+                axe: 10,
+                auto: 100,
+                element: 50
+            }
+        };
+
+        const elements = ['fire', 'ice', 'lightning', 'earth', 'wind'];
+        const elementMultipliers = {
+            normal: 1,
+            fire: 1.2,
+            ice: 1.3,
+            lightning: 1.5,
+            earth: 1.1,
+            wind: 1.4
+        };
+
+        function chopTree() {
+            const damage = gameState.chopsPerClick * gameState.elementPower;
+            gameState.treeHealth -= damage;
+            gameState.totalChops += damage;
+            
+            // Audio + visual feedback
+            try{ ensureAudio(); playChop(); }catch(e){}
+            createTapIndicator();
+            createParticles();
+            
+            // Check if tree is defeated
+            if (gameState.treeHealth <= 0) {
+                treeDefeated();
+            }
+            
+            updateUI();
+        }
+
+        function treeDefeated() {
+            gameState.treeLevel++;
+            gameState.maxTreeHealth = Math.floor(gameState.maxTreeHealth * 1.5);
+            gameState.treeHealth = gameState.maxTreeHealth;
+            
+            // Random element chance
+            if (Math.random() < 0.3) {
+                const newElement = elements[Math.floor(Math.random() * elements.length)];
+                setTreeElement(newElement);
+            } else {
+                setTreeElement('normal');
+            }
+            
+            // Level up effects
+            try{ ensureAudio(); playFall(); }catch(e){}
+            createLevelUpEffect();
+        }
+
+        function setTreeElement(element) {
+            gameState.currentTreeElement = element;
+            const crown = document.getElementById('treeCrown');
+            crown.className = `tree-crown ${element}`;
+        }
+
+        function selectElement(element) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.element-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to selected button
+            event.target.classList.add('active');
+            
+            gameState.currentElement = element;
+            gameState.elementPower = elementMultipliers[element];
+        }
+
+        function buyUpgrade(type) {
+            const cost = gameState.costs[type];
+            
+            if (gameState.totalChops >= cost) {
+                gameState.totalChops -= cost;
+                gameState.upgrades[type]++;
+                gameState.costs[type] = Math.floor(cost * 1.5);
+                
+                // Apply upgrade effects
+                switch(type) {
+                    case 'axe':
+                        gameState.chopsPerClick += 1;
+                        break;
+                    case 'auto':
+                        gameState.autoChoppers++;
+                        document.getElementById('autoChopper').style.display = 'block';
+                        break;
+                    case 'element':
+                        gameState.elementPower *= 1.1;
+                        break;
+                }
+                
+                updateUI();
+            }
+        }
+
+        function prestige() {
+            if (gameState.totalChops >= 1000) {
+                gameState.prestigeLevel++;
+                gameState.totalChops = 0;
+                gameState.treeLevel = 1;
+                gameState.treeHealth = 100;
+                gameState.maxTreeHealth = 100;
+                gameState.chopsPerClick = 1 + gameState.prestigeLevel;
+                gameState.autoChoppers = 0;
+                gameState.costs = { axe: 10, auto: 100, element: 50 };
+                
+                document.getElementById('autoChopper').style.display = 'none';
+                setTreeElement('normal');
+                updateUI();
+            }
+        }
+
+        function createTapIndicator() {
+            const container = document.getElementById('floatingNumbers');
+            const indicator = document.createElement('div');
+            indicator.className = 'tap-indicator';
+            indicator.textContent = `+${Math.floor(gameState.chopsPerClick * gameState.elementPower)}`;
+            
+            const rect = document.getElementById('mainTree').getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            indicator.style.left = '50%';
+            indicator.style.top = '50%';
+            
+            container.appendChild(indicator);
+            
+            setTimeout(() => {
+                container.removeChild(indicator);
+            }, 1000);
+        }
+
+        function createParticles() {
+            const container = document.getElementById('floatingNumbers');
+            const colors = ['#8b4513', '#90EE90', '#ffd700'];
+            
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.left = `${45 + Math.random() * 10}%`;
+                particle.style.top = `${45 + Math.random() * 10}%`;
+                
+                const dx = (Math.random() - 0.5) * 100;
+                const dy = (Math.random() - 0.5) * 100;
+                particle.style.setProperty('--dx', dx + 'px');
+                particle.style.setProperty('--dy', dy + 'px');
+                
+                container.appendChild(particle);
+                
+                setTimeout(() => {
+                    if (container.contains(particle)) {
+                        container.removeChild(particle);
+                    }
+                }, 800);
+            }
+        }
+
+        function createLevelUpEffect() {
+            // Screen flash effect
+            const screen = document.querySelector('.screen');
+            screen.style.background = 'rgba(255, 215, 0, 0.3)';
+            setTimeout(() => {
+                screen.style.background = 'linear-gradient(135deg, #87CEEB 0%, #90EE90 100%)';
+            }, 200);
+        }
+
+        function updateUI() {
+            document.getElementById('totalChops').textContent = Math.floor(gameState.totalChops);
+            document.getElementById('chopsPerSec').textContent = gameState.autoChoppers;
+            document.getElementById('treeLevel').textContent = gameState.treeLevel;
+            document.getElementById('treeLevelDisplay').textContent = `Lv. ${gameState.treeLevel}`;
+            
+            const healthPercent = (gameState.treeHealth / gameState.maxTreeHealth) * 100;
+            document.getElementById('healthFill').style.width = healthPercent + '%';
+            
+            // Update upgrade costs
+            document.getElementById('axeCost').textContent = gameState.costs.axe;
+            document.getElementById('autoCost').textContent = gameState.costs.auto;
+            document.getElementById('elementCost').textContent = gameState.costs.element;
+            
+            // Update upgrade button states
+            document.getElementById('axeUpgrade').disabled = gameState.totalChops < gameState.costs.axe;
+            document.getElementById('autoChopUpgrade').disabled = gameState.totalChops < gameState.costs.auto;
+            document.getElementById('elementUpgrade').disabled = gameState.totalChops < gameState.costs.element;
+            document.getElementById('prestigeUpgrade').disabled = gameState.totalChops < 1000;
+            
+            // Update prestige indicator
+            document.querySelector('.prestige-indicator').textContent = `⭐ Prestige ${gameState.prestigeLevel}`;
+        }
+
+        // Auto-chopping loop
+        setInterval(() => {
+            if (gameState.autoChoppers > 0) {
+                const damage = gameState.autoChoppers;
+                gameState.treeHealth -= damage;
+                gameState.totalChops += damage;
+                
+                if (gameState.treeHealth <= 0) {
+                    treeDefeated();
+                }
+                
+                updateUI();
+            }
+        }, 1000);
+
+        // Show desktop info on larger screens
+        if (window.innerWidth >= 768) {
+            document.querySelector('.desktop-info').style.display = 'block';
+            document.body.style.display = 'flex';
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) {
+                document.querySelector('.desktop-info').style.display = 'block';
+                document.body.style.display = 'flex';
+            } else {
+                document.querySelector('.desktop-info').style.display = 'none';
+                document.body.style.display = 'block';
+            }
+        });
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>

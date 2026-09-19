@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/tree_preview_card.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tree.png" id="2_tree"]
+
+[node name="TreePreviewCard" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 132)
+size_flags_horizontal = 3
+theme_type_variation = &"PreviewCard"
+script = ExtResource("1_script")
+
+[node name="CardBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="CardBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 64)
+layout_mode = 2
+texture = ExtResource("2_tree")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="ElementSwatch" type="ColorRect" parent="CardBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+color = Color(0.34, 0.55, 0.28, 1)
+
+[node name="ElementLabel" type="Label" parent="CardBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.28, 0.13, 0.05, 1)
+theme_override_font_sizes/font_size = 13
+text = "None"
+horizontal_alignment = 1
+
+[node name="DifficultyLabel" type="Label" parent="CardBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.45, 0.08, 1)
+theme_override_font_sizes/font_size = 14
+text = "★★☆"
+horizontal_alignment = 1
