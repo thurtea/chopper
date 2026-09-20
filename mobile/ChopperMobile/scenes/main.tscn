@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Texture2D" path="res://assets/sprites/chopper.png" id="2_chopper"]
@@ -128,6 +128,18 @@ corner_radius_top_right = 36
 corner_radius_bottom_right = 36
 corner_radius_bottom_left = 36
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_element_disabled"]
+bg_color = Color(0.32, 0.24, 0.18, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.16, 0.08, 0.04, 1)
+corner_radius_top_left = 36
+corner_radius_top_right = 36
+corner_radius_bottom_right = 36
+corner_radius_bottom_left = 36
+
 [node name="Main" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -170,6 +182,7 @@ mouse_filter = 2
 theme_type_variation = &"WoodFrame"
 
 [node name="WoodFrameInner" type="PanelContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -184,6 +197,7 @@ mouse_filter = 2
 theme_type_variation = &"WoodFrameInner"
 
 [node name="Margin" type="MarginContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -579,6 +593,7 @@ theme_override_font_sizes/font_size = 12
 theme_override_styles/hover = SubResource("StyleBoxFlat_fire")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_fire_pressed")
 theme_override_styles/normal = SubResource("StyleBoxFlat_fire")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_element_disabled")
 text = "FIRE"
 
 [node name="Ice" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
@@ -593,6 +608,7 @@ theme_override_font_sizes/font_size = 12
 theme_override_styles/hover = SubResource("StyleBoxFlat_ice")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_ice_pressed")
 theme_override_styles/normal = SubResource("StyleBoxFlat_ice")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_element_disabled")
 text = "ICE"
 
 [node name="Bolt" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
@@ -607,6 +623,7 @@ theme_override_font_sizes/font_size = 12
 theme_override_styles/hover = SubResource("StyleBoxFlat_bolt")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_bolt_pressed")
 theme_override_styles/normal = SubResource("StyleBoxFlat_bolt")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_element_disabled")
 text = "BOLT"
 
 [node name="Earth" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
@@ -621,6 +638,7 @@ theme_override_font_sizes/font_size = 12
 theme_override_styles/hover = SubResource("StyleBoxFlat_earth")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_earth_pressed")
 theme_override_styles/normal = SubResource("StyleBoxFlat_earth")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_element_disabled")
 text = "EARTH"
 
 [node name="Wind" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
@@ -635,6 +653,7 @@ theme_override_font_sizes/font_size = 12
 theme_override_styles/hover = SubResource("StyleBoxFlat_wind")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_wind_pressed")
 theme_override_styles/normal = SubResource("StyleBoxFlat_wind")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_element_disabled")
 text = "WIND"
 
 [node name="UpgradeGrid" type="GridContainer" parent="Margin/Layout/BottomPanel/BottomInner"]

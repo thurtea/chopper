@@ -14,26 +14,25 @@ Source of truth for the full prompt sequence: `readme.md` in this same `mobile/`
 
 ## Snapshot (2026-09-20)
 
-**Done:** Prompts 1.1 through 4.2. Phase 3 (core systems) is feature-complete.
-Prompt 4.1 replaced Prompt 2.2's rotation-only swing with a three-stage
-anticipation/hit/recovery tween, added a per-hit tree shake, paired
-leaf+chip particles, a smooth health bar, and floating "+X Chops". Prompt
-4.2 added autoload `AudioManager` (`ChopperMobile/autoload/audio_manager.gd`):
-every SFX goes through `play_*()` methods, Prompt 2.2's plain `HitSfx`
-node is gone, a quiet looping pad starts with the game, and volumes/mute
-save to `user://audio.cfg`. Tapping the tree plays swing+hit; a kill plays
-tree-fall+collect; a granted enchantment plays a reveal; a successful
-upgrade/prestige plays a purchase chime; element buttons play a UI click.
+**Done:** Prompts 1.1 through 4.3. Phase 3 (core systems) and Phase 4
+(juice / audio / UI polish) are feature-complete per `readme.md`.
+Prompt 4.3 added real pressed and disabled StyleBoxes for upgrades,
+prestige, and element buttons; unaffordable cost labels turn red (and
+"Pick an element" / locked prestige greys out); the Prestige button
+pulses while `can_prestige()` is true; the three upcoming-tree cards
+idle-sway out of phase; and the UI margin plus inner wood frame inset
+by `DisplayServer.window_get_safe_area()` so notches do not cover
+buttons. Sky / ground / outer frame stay full-bleed.
 
 `project.godot` and a batch of `.import`/`.uid` files appeared untracked
 since an earlier session, with the feature tag bumped to Godot 4.7, meaning
 the project has been opened in a real local editor at some point, but
-whether any of Prompts 2.2 through 4.2 were actually played is not
+whether any of Prompts 2.2 through 4.3 were actually played is not
 recorded. Confirm before assuming a real playtest pass already happened.
 
-**Next:** playtest Prompt 4.1 juice and Prompt 4.2 audio in a real Godot
-editor, then Prompt 4.3 (UI polish: pressed/disabled states, unaffordable
-cost text, pulsing Prestige button, idle preview cards, safe-area
-handling). Do not start Phase 5 yet.
+**Next:** playtest Prompts 4.1–4.3 in a real Godot editor, then Phase 5
+Prompt 5.1 (prestige UX). Do not start 5.1 until that playtest has
+happened. No mute button was added in 4.3; AudioManager mute APIs from
+4.2 are still there for a later control.
 
 Paste the resume prompt from `../tomorrow.md` into Claude Code / Cursor.

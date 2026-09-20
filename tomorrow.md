@@ -195,43 +195,65 @@ already covered.
   before dedicated files exist. Swap the stream assignments later;
   the method names stay put.
 - Volumes and mute flags save to `user://audio.cfg` (ConfigFile) on
-  every change, independent of Prompt 5.3's full run save. There is no
-  mute button in the UI yet (that is Prompt 4.3 / later); the mute
-  APIs are live and persist across restarts.
+  every change, independent of Prompt 5.3's full run save. Mute APIs are
+  live; there is still no mute button in the UI (Prompt 4.3's list did
+  not include one).
 - Wired call sites: swing+hit on every chop, tree-fall+collect on kill,
   enchantment reveal when granted, upgrade chime on a successful
   `buy_*()` / prestige, UI click on the five element buttons. Auto
   Chopper's passive CPS does not play collect, on purpose.
 
+**ChopperMobile Prompt 4.3: UI polish**
+
+- Pressed and disabled StyleBoxes for `UpgradeButton` and `PrestigeButton`
+  in `assets/themes/chopper_theme.tres` (pressed is a darker inset;
+  disabled is a desaturated grey-brown / grey-purple). Prestige no
+  longer reuses one style for hover/normal/pressed. Element buttons
+  keep their existing per-element pressed styles and now also have a
+  shared disabled StyleBox.
+- Cost labels go red when the player cannot afford the upgrade, stay
+  cream when they can, grey out for "Pick an element" / locked Prestige
+  hint, and turn gold for "Active: N left" and "Ready!" prestige text.
+- Prestige button pulses (scale 1.0 <-> 1.07 plus a slight modulate
+  breathe) only while `GameState.can_prestige()` is true. The tween is
+  not restarted on every stats refresh, and it uses scale (not
+  position) because the button is a GridContainer child.
+- Upcoming preview cards idle-animate their tree icon (slow sway +
+  breathe), staggered by sibling index so the three cards are out of
+  phase. `set_preview()` does not restart the loop, which would hitch
+  on every chop.
+- Safe-area insets: `DisplayServer.window_get_safe_area()` is mapped
+  into viewport pixels and added on top of the designed 24/24/24/18
+  margins on `%Margin`, and onto `%WoodFrameInner`'s 14px offsets.
+  Sky/ground/outer wood frame stay full-bleed. Desktop (safe area ==
+  window) adds zero extra pad. Reapplied on viewport resize and app
+  resume.
+
 ### Not done
 
-- **Playtest pass** (NEXT): none of Prompts 2.2 through 4.2 has a
+- **Playtest pass** (NEXT): none of Prompts 2.2 through 4.3 has a
   confirmed playtest recorded here (see the untracked-editor-files note
-  near the top of this file). For 4.2 specifically: tap the tree and
-  confirm swing+hit overlap without cutting off, fell a tree and hear
-  the heavier fall plus collect chime, buy an upgrade, tap an element
-  button, and grant an enchantment (or lower
-  `EnchantmentData.MILESTONE_INTERVAL` temporarily) to hear the reveal.
-  Confirm the quiet looping pad starts with the game and does not drown
-  the axe. If the procedural UI/collect/BGM tones feel cheap, that is
-  expected: they are stand-ins for recorded clips.
-- Prompt 4.3 (UI polish): pressed/disabled button states, unaffordable
-  cost text, pulsing Prestige button, idle preview-card animation,
-  safe-area handling. A mute control would naturally land here too,
-  calling the AudioManager mute APIs Prompt 4.2 already exposes.
-- Phase 5+: prestige UX, balance, save/load, mobile export
+  near the top of this file). For 4.3 specifically: confirm unaffordable
+  upgrade costs turn red and the button uses the grey disabled style;
+  buy until Prestige unlocks and watch it pulse, then prestige and
+  confirm the pulse stops; check the three upcoming cards swaying out
+  of phase; on a notched-phone emulator (or after shrinking the desktop
+  window, which will not itself simulate a notch) confirm the header
+  and bottom buttons still sit inside the safe rectangle.
+- Phase 5+: prestige UX (Prompt 5.1), balance, save/load, mobile export.
+  A mute control that calls AudioManager.set_music_muted still has no
+  UI home; it can land with 6.1 mobile polish without changing 4.2.
 
 ---
 
 ## What is next
 
-Prompts 4.1 (animation/particles) and 4.2 (AudioManager) are in. Open
-the project in a real Godot editor and playtest the juice plus the new
-audio (see "Not done" above) before starting anything else. Once that
-feels right, **Prompt 4.3** is the rest of Phase 4: UI polish
-(pressed/disabled states, unaffordable cost text, pulsing Prestige
-button, idle preview-card animation, safe-area handling). Do not start
-Phase 5 until 4.3 is done.
+Phase 4 (juice, audio, UI polish) is feature-complete per `mobile/readme.md`.
+Open the project in a real Godot editor and playtest Prompts 4.1–4.3
+together (see "Not done" above) before starting anything else. Once that
+feels right, **Phase 5** begins with Prompt 5.1 (prestige UX: a clear
+"Prestige Available" state, reset rules, persistent multiplier). Do not
+start 5.1 until the Phase 4 playtest has happened.
 
 ---
 
@@ -250,20 +272,20 @@ Prompt 2.2 (manual chopping), Prompt 2.3 (weighted tree generation), Prompt 3.1
 (the four core upgrades), Prompt 3.2 (elemental selector buttons + visual
 indicators), Prompt 3.3 (the enchantment system), Prompt 4.1 (multi-stage
 axe-swing tween, tree shake, paired leaf/chip particles, smooth health bar,
-floating "+X Chops"), and Prompt 4.2 (AudioManager autoload: play_swing /
-play_hit / play_tree_crack / play_tree_fall / play_collect / play_upgrade /
-play_enchantment / play_ui_click, looping mute-able BGM, volumes and mute
-saved to user://audio.cfg; HitSfx node from Prompt 2.2 is gone). This has
-not been confirmed playtested in a real Godot editor session. Playtest the
-4.1 juice and 4.2 audio (overlapping hits, tree-fall+collect, upgrade chime,
-element click, enchantment reveal, quiet looping pad) and fix anything that
-feels off before moving on.
+floating "+X Chops"), Prompt 4.2 (AudioManager autoload), and Prompt 4.3
+(pressed/disabled button styles, unaffordable cost text, pulsing Prestige
+button, idle preview cards, safe-area insets). Phase 4 is now
+feature-complete per mobile/readme.md. This has not been confirmed
+playtested in a real Godot editor session. Playtest 4.1–4.3 (disabled
+upgrade look + red costs, Prestige pulse on unlock, staggered preview
+idle, notches not covering UI) and fix anything that feels off before
+moving on.
 
-Do Prompt 4.3 from mobile/readme.md (Phase 4): polish pass on UI. Buttons
-have pressed and disabled states; cost text turns red or greys out when
-unaffordable; Prestige button pulses when it becomes available; upcoming
-tree previews have a subtle idle animation; safe area handling for notched
-phones. A mute control that calls AudioManager.set_music_muted /
-toggle_music_mute would fit here if you add one. Keep changes inside
-ChopperMobile. Do not start Phase 5.
+Do Prompt 5.1 from mobile/readme.md (Phase 5): prestige UX. When the
+player reaches the prestige threshold, show a clear "Prestige Available"
+state. On prestige: reset current chops, upgrades (except prestige
+level), and tree progress. Increase prestige level by 1 and apply a
+permanent multiplier to all chop gains and damage. Keep the prestige
+level and its multiplier across sessions. Keep changes inside
+ChopperMobile. Do not start Prompt 5.2.
 ```

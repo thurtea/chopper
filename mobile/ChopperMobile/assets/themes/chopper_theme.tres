@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=16 format=3]
+[gd_resource type="Theme" load_steps=20 format=3]
 
 [sub_resource type="StyleBoxFlat" id="wood_solid"]
 content_margin_left = 14.0
@@ -159,6 +159,22 @@ corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 
+[sub_resource type="StyleBoxFlat" id="btn_upgrade_disabled"]
+content_margin_left = 10.0
+content_margin_top = 12.0
+content_margin_right = 10.0
+content_margin_bottom = 12.0
+bg_color = Color(0.42, 0.28, 0.2, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.22, 0.12, 0.08, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
 [sub_resource type="StyleBoxFlat" id="btn_prestige"]
 content_margin_left = 10.0
 content_margin_top = 12.0
@@ -170,6 +186,54 @@ border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
 border_color = Color(0.28, 0.16, 0.45, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="btn_prestige_hover"]
+content_margin_left = 10.0
+content_margin_top = 12.0
+content_margin_right = 10.0
+content_margin_bottom = 12.0
+bg_color = Color(0.64, 0.46, 0.9, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.38, 0.22, 0.58, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="btn_prestige_pressed"]
+content_margin_left = 10.0
+content_margin_top = 14.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.38, 0.24, 0.58, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.2, 0.1, 0.32, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="btn_prestige_disabled"]
+content_margin_left = 10.0
+content_margin_top = 12.0
+content_margin_right = 10.0
+content_margin_bottom = 12.0
+bg_color = Color(0.32, 0.26, 0.4, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.18, 0.12, 0.24, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
@@ -233,14 +297,22 @@ PreviewCard/base_type = "PanelContainer"
 PreviewCard/styles/panel = SubResource("preview_card")
 UpgradeButton/base_type = "Button"
 UpgradeButton/colors/font_color = Color(1, 1, 1, 1)
+UpgradeButton/colors/font_disabled_color = Color(1, 1, 1, 0.42)
+UpgradeButton/colors/font_pressed_color = Color(1, 0.9, 0.72, 1)
 UpgradeButton/styles/hover = SubResource("btn_upgrade_hover")
 UpgradeButton/styles/normal = SubResource("btn_upgrade")
 UpgradeButton/styles/pressed = SubResource("btn_upgrade_pressed")
+UpgradeButton/styles/disabled = SubResource("btn_upgrade_disabled")
+UpgradeButton/styles/focus = SubResource("btn_upgrade_hover")
 PrestigeButton/base_type = "Button"
 PrestigeButton/colors/font_color = Color(1, 1, 1, 1)
-PrestigeButton/styles/hover = SubResource("btn_prestige")
+PrestigeButton/colors/font_disabled_color = Color(1, 1, 1, 0.42)
+PrestigeButton/colors/font_pressed_color = Color(0.92, 0.82, 1, 1)
+PrestigeButton/styles/hover = SubResource("btn_prestige_hover")
 PrestigeButton/styles/normal = SubResource("btn_prestige")
-PrestigeButton/styles/pressed = SubResource("btn_prestige")
+PrestigeButton/styles/pressed = SubResource("btn_prestige_pressed")
+PrestigeButton/styles/disabled = SubResource("btn_prestige_disabled")
+PrestigeButton/styles/focus = SubResource("btn_prestige_hover")
 PrestigeBadge/base_type = "Label"
 PrestigeBadge/colors/font_color = Color(1, 1, 1, 1)
 PrestigeBadge/styles/normal = SubResource("badge")

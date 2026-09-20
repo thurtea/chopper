@@ -32,6 +32,8 @@ extends Control
 @onready var hit_particles_leaf: CPUParticles2D = %HitParticlesLeaf
 @onready var kill_particles: CPUParticles2D = %KillParticles
 @onready var kill_particles_leaf: CPUParticles2D = %KillParticlesLeaf
+@onready var ui_margin: MarginContainer = %Margin
+@onready var wood_frame_inner: PanelContainer = %WoodFrameInner
 
 var _shake_tween: Tween
 var _swing_tween: Tween
@@ -39,12 +41,27 @@ var _fall_tween: Tween
 var _tree_shake_tween: Tween
 var _health_tween: Tween
 var _enchantment_banner_tween: Tween
+var _prestige_pulse_tween: Tween
 
 # Prompt 4.1: tracks which TreeData the health bar is currently showing
 # (Resource identity, not value equality) so a brand-new tree (after a
 # kill) snaps the bar straight to full instead of visibly animating up
 # from wherever the old tree's bar was sitting.
 var _last_health_tree: TreeData = null
+
+# Prompt 4.3: designed margins in scenes/main.tscn, kept as the floor
+# so a desktop window (safe area == full window) still has the original
+# padding. Safe-area insets are added on top, never replace these.
+const UI_MARGIN_LEFT := 24
+const UI_MARGIN_TOP := 24
+const UI_MARGIN_RIGHT := 24
+const UI_MARGIN_BOTTOM := 18
+const FRAME_INSET := 14.0
+
+const COST_AFFORDABLE := Color(1, 1, 1, 0.9)
+const COST_UNAFFORDABLE := Color(0.95, 0.35, 0.32, 1)
+const COST_MUTED := Color(1, 1, 1, 0.45)
+const COST_READY := Color(1, 0.84, 0.2, 1)
 
 
 func _ready() -> void:
@@ -59,6 +76,10 @@ func _ready() -> void:
 	bolt_button.pressed.connect(func() -> void: _select_element(TreeData.Element.BOLT))
 	earth_button.pressed.connect(func() -> void: _select_element(TreeData.Element.EARTH))
 	wind_button.pressed.connect(func() -> void: _select_element(TreeData.Element.WIND))
+	prestige_button.resized.connect(_center_prestige_pivot)
+	_center_prestige_pivot()
+	get_viewport().size_changed.connect(_apply_safe_area)
+	_apply_safe_area()
 	_refresh_ui()
 
 
@@ -196,33 +217,127 @@ func _refresh_chopper_element_badge(chopper: ChopperData) -> void:
 
 ## Prompt 3.1: real costs (from UpgradeConfig) and afford-gated buttons,
 ## replacing the static placeholder cost text Prompt 1.2's UI shipped with.
+## Prompt 4.3 colours the cost/hint labels: red when the player cannot
+## afford the upgrade, gold when Prestige is ready, muted grey for
+## "Pick an element" (not a price, but still a blocked state).
 func _refresh_upgrade_buttons(chopper: ChopperData) -> void:
 	var axe_price := UpgradeConfig.better_axe_cost(GameState.axe_level)
+	var axe_ok := GameState.chops >= axe_price
 	axe_cost.text = "Cost: %d" % axe_price
-	better_axe_button.disabled = GameState.chops < axe_price
+	better_axe_button.disabled = not axe_ok
+	_set_cost_color(axe_cost, COST_AFFORDABLE if axe_ok else COST_UNAFFORDABLE)
 
 	var auto_price := UpgradeConfig.auto_chopper_cost(GameState.auto_chopper_level)
+	var auto_ok := GameState.chops >= auto_price
 	auto_cost.text = "Cost: %d" % auto_price
-	auto_chopper_button.disabled = GameState.chops < auto_price
+	auto_chopper_button.disabled = not auto_ok
+	_set_cost_color(auto_cost, COST_AFFORDABLE if auto_ok else COST_UNAFFORDABLE)
 
+	var element_ok := (
+		GameState.chops >= UpgradeConfig.ELEMENT_POWER_COST
+		and chopper.selected_element != TreeData.Element.NONE
+	)
 	if chopper.has_element_power():
 		element_cost.text = "Active: %d left" % chopper.element_trees_remaining
+		_set_cost_color(element_cost, COST_READY)
 	elif chopper.selected_element == TreeData.Element.NONE:
 		element_cost.text = "Pick an element"
+		_set_cost_color(element_cost, COST_MUTED)
 	else:
 		element_cost.text = "Cost: %d" % UpgradeConfig.ELEMENT_POWER_COST
-	element_power_button.disabled = (
-		GameState.chops < UpgradeConfig.ELEMENT_POWER_COST
-		or chopper.selected_element == TreeData.Element.NONE
-	)
+		_set_cost_color(element_cost, COST_AFFORDABLE if element_ok else COST_UNAFFORDABLE)
+	element_power_button.disabled = not element_ok
 
 	var prestige_ready := GameState.can_prestige()
 	if prestige_ready:
 		var next_multiplier := UpgradeConfig.prestige_multiplier_for_level(GameState.prestige_level + 1)
 		prestige_hint.text = "Ready! x%.1f -> x%.1f" % [chopper.prestige_multiplier, next_multiplier]
+		_set_cost_color(prestige_hint, COST_READY)
 	else:
 		prestige_hint.text = "Unlocks at %d" % UpgradeConfig.PRESTIGE_CHOP_THRESHOLD
+		_set_cost_color(prestige_hint, COST_MUTED)
 	prestige_button.disabled = not prestige_ready
+	_set_prestige_pulse(prestige_ready)
+
+
+func _set_cost_color(label: Label, color: Color) -> void:
+	label.add_theme_color_override("font_color", color)
+
+
+## Prompt 4.3: Prestige button pulses (scale + a slight brightness
+## breathe) only while can_prestige() is true. Idempotent: a stats
+## refresh that keeps it ready must not restart the tween from scratch,
+## or the pulse would hitch every chop once the player is over the
+## threshold. Scale rather than position, because PrestigeReset lives
+## in a GridContainer that would overwrite .position on the next layout.
+func _set_prestige_pulse(active: bool) -> void:
+	if not active:
+		if _prestige_pulse_tween and _prestige_pulse_tween.is_valid():
+			_prestige_pulse_tween.kill()
+		prestige_button.scale = Vector2.ONE
+		prestige_button.modulate = Color.WHITE
+		return
+	if _prestige_pulse_tween and _prestige_pulse_tween.is_valid():
+		return
+	_center_prestige_pivot()
+	_prestige_pulse_tween = create_tween().set_loops()
+	_prestige_pulse_tween.tween_property(prestige_button, "scale", Vector2(1.07, 1.07), 0.55) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_prestige_pulse_tween.parallel().tween_property(
+		prestige_button, "modulate", Color(1.18, 1.12, 1.35), 0.55
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_prestige_pulse_tween.tween_property(prestige_button, "scale", Vector2.ONE, 0.55) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_prestige_pulse_tween.parallel().tween_property(
+		prestige_button, "modulate", Color.WHITE, 0.55
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _center_prestige_pivot() -> void:
+	prestige_button.pivot_offset = prestige_button.size * 0.5
+
+
+## Prompt 4.3: keep interactive UI (and the inner gold frame) inside the
+## display's unobscured rectangle so notches / home indicators / camera
+## cutouts do not cover buttons or the header. Sky, ground, and the
+## outer wooden bezel stay full-bleed on purpose: they are decoration,
+## and filling the cutout avoids black bars. Desktop reports a safe
+## area equal to the window, so the extra pad is zero and the original
+## 24/24/24/18 margins remain.
+func _apply_safe_area() -> void:
+	var pad := _safe_area_pads()
+	ui_margin.add_theme_constant_override("margin_left", UI_MARGIN_LEFT + int(round(pad.x)))
+	ui_margin.add_theme_constant_override("margin_top", UI_MARGIN_TOP + int(round(pad.y)))
+	ui_margin.add_theme_constant_override("margin_right", UI_MARGIN_RIGHT + int(round(pad.z)))
+	ui_margin.add_theme_constant_override("margin_bottom", UI_MARGIN_BOTTOM + int(round(pad.w)))
+	wood_frame_inner.offset_left = FRAME_INSET + pad.x
+	wood_frame_inner.offset_top = FRAME_INSET + pad.y
+	wood_frame_inner.offset_right = -(FRAME_INSET + pad.z)
+	wood_frame_inner.offset_bottom = -(FRAME_INSET + pad.w)
+
+
+func _safe_area_pads() -> Vector4:
+	var window_size := Vector2(DisplayServer.window_get_size())
+	if window_size.x <= 1.0 or window_size.y <= 1.0:
+		return Vector4.ZERO
+	var safe := DisplayServer.window_get_safe_area()
+	if safe.size.x <= 0 or safe.size.y <= 0:
+		return Vector4.ZERO
+	var viewport_size := get_viewport().get_visible_rect().size
+	var sx := viewport_size.x / window_size.x
+	var sy := viewport_size.y / window_size.y
+	return Vector4(
+		maxf(0.0, float(safe.position.x) * sx),
+		maxf(0.0, float(safe.position.y) * sy),
+		maxf(0.0, float(window_size.x - safe.end.x) * sx),
+		maxf(0.0, float(window_size.y - safe.end.y) * sy)
+	)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_SIZE_CHANGED or what == NOTIFICATION_APPLICATION_RESUMED:
+		if is_node_ready():
+			_apply_safe_area()
 
 
 ## Prompt 3.2: keeps the five element buttons' pressed/toggled look in
