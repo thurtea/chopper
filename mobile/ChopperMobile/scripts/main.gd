@@ -11,6 +11,11 @@ extends Control
 @onready var auto_cost: Label = %AutoCost
 @onready var element_cost: Label = %ElementCost
 @onready var preview_row: HBoxContainer = %PreviewRow
+@onready var better_axe_button: Button = %BetterAxe
+@onready var auto_chopper_button: Button = %AutoChopper
+@onready var element_power_button: Button = %ElementPower
+@onready var prestige_button: Button = %PrestigeReset
+@onready var prestige_hint: Label = %PrestigeHint
 @onready var play_inner: Control = %PlayInner
 @onready var tree_sprite: TextureRect = %TreeSprite
 @onready var chopper_sprite: TextureRect = %ChopperSprite
@@ -26,6 +31,10 @@ var _fall_tween: Tween
 func _ready() -> void:
 	GameState.stats_changed.connect(_refresh_ui)
 	tree_sprite.gui_input.connect(_on_tree_gui_input)
+	better_axe_button.pressed.connect(func() -> void: GameState.buy_better_axe())
+	auto_chopper_button.pressed.connect(func() -> void: GameState.buy_auto_chopper())
+	element_power_button.pressed.connect(func() -> void: GameState.buy_element_power())
+	prestige_button.pressed.connect(func() -> void: GameState.prestige_reset())
 	_refresh_ui()
 
 
@@ -59,7 +68,7 @@ func _refresh_ui() -> void:
 	var tree := GameState.current_tree
 	var chopper := GameState.chopper
 	chops_value.text = str(GameState.chops)
-	cps_value.text = str(chopper.auto_chop_rate)
+	cps_value.text = "%.1f" % (chopper.auto_chop_rate * chopper.prestige_multiplier)
 	tree_level_value.text = str(tree.tree_level)
 	tree_level_badge.text = "Lv. %d" % tree.tree_level
 	tree_element_badge.text = GameState.element_display_name(tree.element)
@@ -70,10 +79,34 @@ func _refresh_ui() -> void:
 	health_bar.max_value = tree.max_health
 	health_bar.value = tree.health
 	prestige_badge.text = "Prestige %d" % GameState.prestige_level
-	axe_cost.text = "Cost: 10"
-	auto_cost.text = "Cost: 100"
-	element_cost.text = "Cost: 50"
+	_refresh_upgrade_buttons(chopper)
 	_refresh_previews()
+
+
+## Prompt 3.1: real costs (from UpgradeConfig) and afford-gated buttons,
+## replacing the static placeholder cost text Prompt 1.2's UI shipped with.
+func _refresh_upgrade_buttons(chopper: ChopperData) -> void:
+	var axe_price := UpgradeConfig.better_axe_cost(GameState.axe_level)
+	axe_cost.text = "Cost: %d" % axe_price
+	better_axe_button.disabled = GameState.chops < axe_price
+
+	var auto_price := UpgradeConfig.auto_chopper_cost(GameState.auto_chopper_level)
+	auto_cost.text = "Cost: %d" % auto_price
+	auto_chopper_button.disabled = GameState.chops < auto_price
+
+	if chopper.has_element_power():
+		element_cost.text = "Active: %d left" % chopper.element_trees_remaining
+	else:
+		element_cost.text = "Cost: %d" % UpgradeConfig.ELEMENT_POWER_COST
+	element_power_button.disabled = GameState.chops < UpgradeConfig.ELEMENT_POWER_COST
+
+	var prestige_ready := GameState.can_prestige()
+	if prestige_ready:
+		var next_multiplier := UpgradeConfig.prestige_multiplier_for_level(GameState.prestige_level + 1)
+		prestige_hint.text = "Ready! x%.1f -> x%.1f" % [chopper.prestige_multiplier, next_multiplier]
+	else:
+		prestige_hint.text = "Unlocks at %d" % UpgradeConfig.PRESTIGE_CHOP_THRESHOLD
+	prestige_button.disabled = not prestige_ready
 
 
 func _refresh_previews() -> void:

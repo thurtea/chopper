@@ -533,6 +533,7 @@ theme_override_constants/v_separation = 10
 columns = 2
 
 [node name="BetterAxe" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -567,6 +568,7 @@ text = "Cost: 10"
 horizontal_alignment = 1
 
 [node name="AutoChopper" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -601,6 +603,7 @@ text = "Cost: 100"
 horizontal_alignment = 1
 
 [node name="ElementPower" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -635,6 +638,7 @@ text = "Cost: 50"
 horizontal_alignment = 1
 
 [node name="PrestigeReset" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -660,6 +664,7 @@ text = "Prestige Reset"
 horizontal_alignment = 1
 
 [node name="PrestigeHint" type="Label" parent="Margin/Layout/BottomPanel/BottomInner/UpgradeGrid/PrestigeReset/PrestigeBox"]
+unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.9)
