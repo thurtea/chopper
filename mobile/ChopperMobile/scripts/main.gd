@@ -25,6 +25,9 @@ extends Control
 @onready var enchantment_icons: HBoxContainer = %EnchantmentIcons
 @onready var enchantment_banner: PanelContainer = %EnchantmentBanner
 @onready var enchantment_banner_text: Label = %EnchantmentBannerText
+@onready var prestige_banner: PanelContainer = %PrestigeBanner
+@onready var prestige_banner_text: Label = %PrestigeBannerText
+@onready var prestige_confirm_dialog: ConfirmationDialog = %PrestigeConfirmDialog
 @onready var play_inner: Control = %PlayInner
 @onready var tree_sprite: TextureRect = %TreeSprite
 @onready var chopper_sprite: TextureRect = %ChopperSprite
@@ -42,6 +45,7 @@ var _tree_shake_tween: Tween
 var _health_tween: Tween
 var _enchantment_banner_tween: Tween
 var _prestige_pulse_tween: Tween
+var _prestige_banner_tween: Tween
 
 # Prompt 4.1: tracks which TreeData the health bar is currently showing
 # (Resource identity, not value equality) so a brand-new tree (after a
@@ -66,11 +70,13 @@ const COST_READY := Color(1, 0.84, 0.2, 1)
 
 func _ready() -> void:
 	GameState.stats_changed.connect(_refresh_ui)
+	GameState.prestiged.connect(_on_prestiged)
 	tree_sprite.gui_input.connect(_on_tree_gui_input)
 	better_axe_button.pressed.connect(func() -> void: _try_buy(GameState.buy_better_axe))
 	auto_chopper_button.pressed.connect(func() -> void: _try_buy(GameState.buy_auto_chopper))
 	element_power_button.pressed.connect(func() -> void: _try_buy(GameState.buy_element_power))
-	prestige_button.pressed.connect(func() -> void: _try_buy(GameState.prestige_reset))
+	prestige_button.pressed.connect(_on_prestige_pressed)
+	prestige_confirm_dialog.confirmed.connect(func() -> void: _try_buy(GameState.prestige_reset))
 	fire_button.pressed.connect(func() -> void: _select_element(TreeData.Element.FIRE))
 	ice_button.pressed.connect(func() -> void: _select_element(TreeData.Element.ICE))
 	bolt_button.pressed.connect(func() -> void: _select_element(TreeData.Element.BOLT))
@@ -139,6 +145,42 @@ func _select_element(element: TreeData.Element) -> void:
 	AudioManager.play_ui_click()
 
 
+## Prompt 5.1: Prestige is a full run reset, so the button no longer fires
+## it immediately (that was Prompt 3.1's placeholder). It opens a
+## confirmation dialog spelling out exactly what resets and what the
+## permanent payoff is; only PrestigeConfirmDialog's "confirmed" signal
+## (wired in _ready()) actually calls GameState.prestige_reset(). The
+## button is disabled whenever can_prestige() is false, so reaching this
+## handler already implies prestige is available.
+func _on_prestige_pressed() -> void:
+	var chopper := GameState.chopper
+	var next_multiplier := UpgradeConfig.prestige_multiplier_for_level(GameState.prestige_level + 1)
+	prestige_confirm_dialog.dialog_text = (
+		"Reset your Chops, Better Axe, Auto Chopper, and Element Power, plus the current tree and any active enchantments.\n\n"
+		+ "Prestige level and multiplier are permanent: x%.1f -> x%.1f, forever." % [
+			chopper.prestige_multiplier, next_multiplier
+		]
+	)
+	prestige_confirm_dialog.popup_centered()
+
+
+## Prompt 5.1's own "better feedback when prestiging": a big centered
+## banner (distinct from the small corner EnchantmentBanner) spelling out
+## the level just reached and the multiplier change, since prestige_reset()
+## has already wiped the run's own on-screen numbers by the time this fires.
+func _on_prestiged(new_level: int, new_multiplier: float, previous_multiplier: float) -> void:
+	prestige_banner_text.text = "Prestige %d! x%.1f -> x%.1f Chops & Damage, permanently" % [
+		new_level, previous_multiplier, new_multiplier
+	]
+	if _prestige_banner_tween and _prestige_banner_tween.is_valid():
+		_prestige_banner_tween.kill()
+	prestige_banner.modulate.a = 0.0
+	_prestige_banner_tween = create_tween()
+	_prestige_banner_tween.tween_property(prestige_banner, "modulate:a", 1.0, 0.3)
+	_prestige_banner_tween.tween_interval(3.0)
+	_prestige_banner_tween.tween_property(prestige_banner, "modulate:a", 0.0, 0.5)
+
+
 func _refresh_ui() -> void:
 	var tree := GameState.current_tree
 	var chopper := GameState.chopper
@@ -147,7 +189,7 @@ func _refresh_ui() -> void:
 	tree_level_value.text = str(tree.tree_level)
 	tree_level_badge.text = "Lv. %d" % tree.tree_level
 	_refresh_health_bar(tree)
-	prestige_badge.text = "Prestige %d" % GameState.prestige_level
+	prestige_badge.text = "Prestige %d - x%.1f" % [GameState.prestige_level, chopper.prestige_multiplier]
 	_refresh_tree_element_badge(tree, chopper)
 	_refresh_chopper_element_badge(chopper)
 	_refresh_upgrade_buttons(chopper)
@@ -249,12 +291,17 @@ func _refresh_upgrade_buttons(chopper: ChopperData) -> void:
 	element_power_button.disabled = not element_ok
 
 	var prestige_ready := GameState.can_prestige()
+	var next_multiplier := UpgradeConfig.prestige_multiplier_for_level(GameState.prestige_level + 1)
 	if prestige_ready:
-		var next_multiplier := UpgradeConfig.prestige_multiplier_for_level(GameState.prestige_level + 1)
 		prestige_hint.text = "Ready! x%.1f -> x%.1f" % [chopper.prestige_multiplier, next_multiplier]
 		_set_cost_color(prestige_hint, COST_READY)
 	else:
-		prestige_hint.text = "Unlocks at %d" % UpgradeConfig.PRESTIGE_CHOP_THRESHOLD
+		# Prompt 5.1: always preview the multiplier payoff, not just the
+		# Chops threshold, so the player can weigh "is this worth resetting
+		# my run for" before they are even close to affording it.
+		prestige_hint.text = "x%.1f -> x%.1f at %d" % [
+			chopper.prestige_multiplier, next_multiplier, UpgradeConfig.PRESTIGE_CHOP_THRESHOLD
+		]
 		_set_cost_color(prestige_hint, COST_MUTED)
 	prestige_button.disabled = not prestige_ready
 	_set_prestige_pulse(prestige_ready)

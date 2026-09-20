@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=20 format=3]
+[gd_resource type="Theme" load_steps=21 format=3]
 
 [sub_resource type="StyleBoxFlat" id="wood_solid"]
 content_margin_left = 14.0
@@ -253,6 +253,25 @@ corner_radius_top_right = 7
 corner_radius_bottom_right = 7
 corner_radius_bottom_left = 7
 
+[sub_resource type="StyleBoxFlat" id="prestige_banner"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+bg_color = Color(0.3, 0.16, 0.42, 0.97)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(1, 0.84, 0.2, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 4
+shadow_offset = Vector2(0, 2)
+
 [sub_resource type="StyleBoxFlat" id="badge"]
 content_margin_left = 12.0
 content_margin_top = 6.0
@@ -316,3 +335,5 @@ PrestigeButton/styles/focus = SubResource("btn_prestige_hover")
 PrestigeBadge/base_type = "Label"
 PrestigeBadge/colors/font_color = Color(1, 1, 1, 1)
 PrestigeBadge/styles/normal = SubResource("badge")
+PrestigeBanner/base_type = "PanelContainer"
+PrestigeBanner/styles/panel = SubResource("prestige_banner")

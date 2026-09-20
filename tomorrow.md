@@ -1,4 +1,4 @@
-# Chopper Clicker: Session Handoff (2026-09-20)
+# Chopper Clicker: Session Handoff (2026-09-20, updated)
 
 Repo: https://github.com/thurtea/chopper
 Local: `/Users/thurtea/Work/chopper`
@@ -229,31 +229,77 @@ already covered.
   window) adds zero extra pad. Reapplied on viewport resize and app
   resume.
 
+**ChopperMobile Prompt 5.1: Prestige UX**
+
+- Done at the user's explicit request to skip the "Not done" playtest
+  gate this file previously carried (see below) rather than pause for it.
+  The underlying prestige mechanics (`GameState.can_prestige()` /
+  `prestige_reset()`) already existed from Prompt 3.1; 5.1 is the UX
+  layer on top.
+- **Clear currency display + multiplier preview**: `main.gd`'s
+  `PrestigeBadge` (top-left of the play area) now reads "Prestige N -
+  x1.2" instead of just the level. The bottom-panel `PrestigeHint` label
+  now always shows a "current -> next" multiplier preview
+  ("x1.0 -> x1.1 at 1000"), even long before the player can afford it,
+  instead of only showing a number once already at the threshold
+  (`_refresh_upgrade_buttons()` in `scripts/main.gd`).
+- **Confirmation before resetting**: the Prestige button no longer fires
+  the reset on press. It opens a new `PrestigeConfirmDialog`
+  (`ConfirmationDialog`, a top-level child of the `Main` scene root,
+  themed with `chopper_theme.tres`) whose text spells out exactly what
+  resets (Chops, Better Axe, Auto Chopper, Element Power, current tree,
+  active enchantments) and the permanent multiplier the player is about
+  to lock in. Only the dialog's `confirmed` signal calls
+  `GameState.prestige_reset()`; canceling changes nothing.
+- **Post-prestige feedback**: `GameState` gained a new
+  `prestiged(new_level, new_multiplier, previous_multiplier)` signal,
+  emitted at the end of `prestige_reset()` (after the reset has already
+  applied, so the UI reads the *new* state plus the multiplier it just
+  came from). `main.gd`'s `_on_prestiged()` uses it to show a new
+  centered `PrestigeBanner` — gold-bordered (`prestige_banner` StyleBox
+  + `PrestigeBanner` theme type variation, both new in
+  `assets/themes/chopper_theme.tres`), distinct from the small corner
+  `EnchantmentBanner` reused for enchantment grants — that fades in,
+  holds ~3s, and fades out, stating the level reached and the multiplier
+  change plainly.
+- Out of scope on purpose: persisting prestige level/multiplier to disk
+  across app restarts is Prompt 5.3 (Save/Load), not started here. It
+  already survives within a running session since `GameState` is an
+  autoload singleton.
+
 ### Not done
 
-- **Playtest pass** (NEXT): none of Prompts 2.2 through 4.3 has a
-  confirmed playtest recorded here (see the untracked-editor-files note
-  near the top of this file). For 4.3 specifically: confirm unaffordable
-  upgrade costs turn red and the button uses the grey disabled style;
-  buy until Prestige unlocks and watch it pulse, then prestige and
-  confirm the pulse stops; check the three upcoming cards swaying out
-  of phase; on a notched-phone emulator (or after shrinking the desktop
+- **Playtest pass** (NEXT, still outstanding): none of Prompts 2.2
+  through 5.1 has a confirmed playtest recorded here (see the
+  untracked-editor-files note near the top of this file). This file
+  previously said not to start Prompt 5.1 before this playtest; the user
+  explicitly chose to skip that gate for this session, so 5.1 shipped
+  without it. For 4.3: confirm unaffordable upgrade costs turn red and
+  the button uses the grey disabled style; buy until Prestige unlocks
+  and watch it pulse; check the three upcoming cards swaying out of
+  phase; on a notched-phone emulator (or after shrinking the desktop
   window, which will not itself simulate a notch) confirm the header
-  and bottom buttons still sit inside the safe rectangle.
-- Phase 5+: prestige UX (Prompt 5.1), balance, save/load, mobile export.
-  A mute control that calls AudioManager.set_music_muted still has no
-  UI home; it can land with 6.1 mobile polish without changing 4.2.
+  and bottom buttons still sit inside the safe rectangle. For 5.1
+  specifically: confirm the `PrestigeConfirmDialog` text is accurate and
+  legible against the theme, canceling truly changes nothing, confirming
+  resets the run and shows the centered `PrestigeBanner`, and the
+  not-ready `PrestigeHint` text ("x1.0 -> x1.1 at 1000") does not clip
+  at its 12px font size inside the button's width.
+- Phase 5+: balance and progression curve (Prompt 5.2), save/load
+  (Prompt 5.3), mobile export. A mute control that calls
+  AudioManager.set_music_muted still has no UI home; it can land with
+  6.1 mobile polish without changing 4.2.
 
 ---
 
 ## What is next
 
-Phase 4 (juice, audio, UI polish) is feature-complete per `mobile/readme.md`.
-Open the project in a real Godot editor and playtest Prompts 4.1–4.3
-together (see "Not done" above) before starting anything else. Once that
-feels right, **Phase 5** begins with Prompt 5.1 (prestige UX: a clear
-"Prestige Available" state, reset rules, persistent multiplier). Do not
-start 5.1 until the Phase 4 playtest has happened.
+Phase 4 (juice, audio, UI polish) and Prompt 5.1 (prestige UX) are both
+implemented per `mobile/readme.md`, but **none of Prompts 4.1 through
+5.1 has been playtested in a real Godot editor yet** (see "Not done"
+above) — that gate was explicitly skipped for 5.1, not satisfied. Open
+the project in a real Godot editor and playtest all of it together
+before starting Prompt 5.2 (balance and progression curve).
 
 ---
 
@@ -272,20 +318,25 @@ Prompt 2.2 (manual chopping), Prompt 2.3 (weighted tree generation), Prompt 3.1
 (the four core upgrades), Prompt 3.2 (elemental selector buttons + visual
 indicators), Prompt 3.3 (the enchantment system), Prompt 4.1 (multi-stage
 axe-swing tween, tree shake, paired leaf/chip particles, smooth health bar,
-floating "+X Chops"), Prompt 4.2 (AudioManager autoload), and Prompt 4.3
+floating "+X Chops"), Prompt 4.2 (AudioManager autoload), Prompt 4.3
 (pressed/disabled button styles, unaffordable cost text, pulsing Prestige
-button, idle preview cards, safe-area insets). Phase 4 is now
-feature-complete per mobile/readme.md. This has not been confirmed
-playtested in a real Godot editor session. Playtest 4.1–4.3 (disabled
-upgrade look + red costs, Prestige pulse on unlock, staggered preview
-idle, notches not covering UI) and fix anything that feels off before
-moving on.
+button, idle preview cards, safe-area insets), and Prompt 5.1 (prestige
+UX: currency/multiplier display, always-on multiplier preview, a
+confirmation dialog before resetting, and a post-prestige summary
+banner). None of Prompts 2.2 through 5.1 has been confirmed playtested in
+a real Godot editor session. Prompt 5.1 was done at the user's explicit
+request to skip that playtest gate rather than wait for it. Playtest
+4.1–5.1 together (disabled upgrade look + red costs, Prestige pulse on
+unlock, staggered preview idle, notches not covering UI, the new
+PrestigeConfirmDialog + PrestigeBanner flow) and fix anything that feels
+off before moving on.
 
-Do Prompt 5.1 from mobile/readme.md (Phase 5): prestige UX. When the
-player reaches the prestige threshold, show a clear "Prestige Available"
-state. On prestige: reset current chops, upgrades (except prestige
-level), and tree progress. Increase prestige level by 1 and apply a
-permanent multiplier to all chop gains and damage. Keep the prestige
-level and its multiplier across sessions. Keep changes inside
-ChopperMobile. Do not start Prompt 5.2.
+Do Prompt 5.2 from mobile/readme.md (Phase 5): balance and progression
+curve. Tune constants (in scripts/upgrade_config.gd and similar) so early
+game feels fast, mid game has a real Element Power vs. enchantment
+decision, prestige feels meaningful but not mandatory every five minutes,
+and a normal session runs 5-15 minutes before someone wants to prestige
+or stop. Expose all key tunable constants (damage scaling, cost scaling,
+enchantment chances, elemental multipliers) in one place. Keep changes
+inside ChopperMobile. Do not start Prompt 5.3.
 ```

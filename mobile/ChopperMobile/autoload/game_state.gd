@@ -4,6 +4,11 @@ extends Node
 
 signal chops_changed(amount: int)
 signal stats_changed
+## Prompt 5.1: fired after a successful prestige_reset(), once the new
+## level/multiplier are already live, so the UI can show a one-shot "what
+## you just got" summary without re-deriving it from before/after diffing
+## stats_changed snapshots itself.
+signal prestiged(new_level: int, new_multiplier: float, previous_multiplier: float)
 
 # --- Currency ---
 var chops: int = 0:
@@ -246,14 +251,15 @@ func can_prestige() -> bool:
 	return chops >= UpgradeConfig.PRESTIGE_CHOP_THRESHOLD
 
 
-## Minimal prestige reset: only what Prompt 3.1's own bullet list asks
-## for (become available past a threshold, reset the run, grant a
-## permanent multiplier). The fuller prestige UX described in Part 1 of
-## the design doc (a dedicated "Prestige Available" state, a pulsing
-## button, etc.) is Prompt 5.1's job, not started here.
+## Core prestige reset from Prompt 3.1 (become available past a threshold,
+## reset the run, grant a permanent multiplier), plus Prompt 5.1's own
+## `prestiged` emit so the UI can show a one-shot "what you just got"
+## summary. main.gd gates the actual call behind a confirmation dialog;
+## this function itself is unconditional once can_prestige() passes.
 func prestige_reset() -> bool:
 	if not can_prestige():
 		return false
+	var previous_multiplier := chopper.prestige_multiplier
 	prestige_level += 1
 	var new_multiplier := UpgradeConfig.prestige_multiplier_for_level(prestige_level)
 	chops = 0
@@ -274,6 +280,7 @@ func prestige_reset() -> bool:
 	active_enchantments = []
 	_trees_chopped_total = 0
 	stats_changed.emit()
+	prestiged.emit(prestige_level, new_multiplier, previous_multiplier)
 	return true
 
 
