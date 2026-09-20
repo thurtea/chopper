@@ -14,7 +14,7 @@ Source of truth for the full prompt sequence: `readme.md` in this same `mobile/`
 
 ## Snapshot (2026-09-20)
 
-**Done:** Prompts 1.1 through 5.1. Phase 3 (core systems) and Phase 4
+**Done:** Prompts 1.1 through 5.2. Phase 3 (core systems) and Phase 4
 (juice / audio / UI polish) are feature-complete per `readme.md`.
 Prompt 4.3 added real pressed and disabled StyleBoxes for upgrades,
 prestige, and element buttons; unaffordable cost labels turn red (and
@@ -46,20 +46,44 @@ previous_multiplier)` signal, emitted at the end of `prestige_reset()`;
 `EnchantmentBanner`) that fades in, holds ~3s, and fades out with the
 level and multiplier change spelled out.
 
+Prompt 5.2 changes (also done without a playtest, at the user's explicit
+request to continue straight through): the old tree scaling
+(`max_health = 80 + level*20*difficulty`, `chop_reward = 5*level*difficulty`)
+made the very first tree take 50-70 taps for only 5-15 Chops, badly
+undercutting the design doc's "early game feels fast." New
+`UpgradeConfig.tree_max_health()` / `tree_chop_reward()`
+(`TREE_HEALTH_BASE = 6`, `TREE_HEALTH_PER_LEVEL = 5`, `TREE_REWARD_BASE
+= 2`, `TREE_REWARD_PER_LEVEL = 2.5`) get the first kill down to roughly
+5-10 taps. The prestige multiplier (`chopper.prestige_multiplier`)
+boosts both damage and reward, so the old flat 1000-Chop threshold would
+have made every later prestige cycle collapse toward near-instant;
+`UpgradeConfig.prestige_threshold_for_level()` now grows the threshold
+1.3x per level (and `PRESTIGE_MULTIPLIER_PER_LEVEL` moved from `0.1` to
+`0.18`) to hold cycles in a simulated ~6.5-9 minute band across 8
+prestiges, inside the doc's 5-15 minute target. Every other balance
+number that was still hardcoded elsewhere — `TreeData.elemental_multiplier()`'s
+1.5/0.65, and each `EnchantmentData` static constructor's magnitude and
+duration, plus the enchantment grant chance/milestone interval — moved
+into `UpgradeConfig` too (values unchanged except where noted above),
+per the design doc's explicit "expose all key constants in one place."
+Full formulas and reasoning: `../tomorrow.md`.
+
 `project.godot` and a batch of `.import`/`.uid` files appeared untracked
 since an earlier session, with the feature tag bumped to Godot 4.7, meaning
 the project has been opened in a real local editor at some point, but
-whether any of Prompts 2.2 through 5.1 were actually played is not
+whether any of Prompts 2.2 through 5.2 were actually played is not
 recorded. Confirm before assuming a real playtest pass already happened.
 
-**Next:** playtest Prompts 4.1–5.1 together in a real Godot editor
+**Next:** playtest Prompts 4.1–5.2 together in a real Godot editor
 (nothing in this repo confirms any of it has run in a real Godot window
 yet), specifically checking: the confirm dialog's text and buttons read
 correctly and the wood theme applies to it, canceling changes nothing,
-confirming actually resets and shows the centered prestige banner, and
-the not-ready `PrestigeHint` text ("x1.0 -> x1.1 at 1000") does not clip
-inside the button at that font size. Then Prompt 5.2 (balance and
-progression curve). No mute button was added in 4.3; AudioManager mute
-APIs from 4.2 are still there for a later control.
+confirming actually resets and shows the centered prestige banner, the
+not-ready `PrestigeHint` text (now e.g. "x1.0 -> x1.18 at 1000") does
+not clip inside the button at that font size, and — new for 5.2 —
+whether the faster early trees and the prestige cadence actually feel
+right in practice, not just on paper. Then Prompt 5.3 (save/load). No
+mute button was added in 4.3; AudioManager mute APIs from 4.2 are still
+there for a later control.
 
 Paste the resume prompt from `../tomorrow.md` into Claude Code / Cursor.

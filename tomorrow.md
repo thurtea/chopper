@@ -267,6 +267,72 @@ already covered.
   already survives within a running session since `GameState` is an
   autoload singleton.
 
+**ChopperMobile Prompt 5.2: Balance and progression curve**
+
+- Done at the user's explicit request to continue immediately from 5.1,
+  again skipping the "playtest before continuing" gate this file has
+  carried since Phase 4 (see "Not done" below, still outstanding).
+- **The core problem found:** `TreeData.make()` set `max_health = 80 +
+  (level * 20) * difficulty` and `chop_reward = 5 * level * difficulty`
+  (no base). At level 1, that is 100-140 health for only 5-15 Chops —
+  with starting `axe_damage = 1`, the very first tree took 50-70 taps
+  (tapping continuously) just to earn enough for the 10-Chop Better Axe.
+  That directly contradicts the design doc's "early game feels fast and
+  rewarding." A python simulation (greedy-upgrade-buying, ~2.2 taps/sec)
+  confirmed this and was used to find replacement constants: see below.
+- **New tree scaling** (`scripts/upgrade_config.gd`): `TREE_HEALTH_BASE
+  = 6`, `TREE_HEALTH_PER_LEVEL = 5`, `TREE_REWARD_BASE = 2`,
+  `TREE_REWARD_PER_LEVEL = 2.5`, read by new `UpgradeConfig.tree_max_health()`
+  / `tree_chop_reward()`. `TreeData.make()` (`scripts/tree_data.gd`) now
+  calls those instead of doing its own arithmetic. Effect: the first
+  tree now dies in roughly 5-10 taps for 5-10 Chops (was 50-70 taps for
+  5-15 Chops), so Better Axe's first level or two is reachable within
+  the first ~20 seconds of play.
+- **Prestige now scales per cycle, not just per level**
+  (`autoload/game_state.gd`'s `can_prestige()` / `prestige_reset()`,
+  `scripts/main.gd`'s prestige hint text): the prestige multiplier
+  applies to *both* chop damage and Chop rewards, so a flat 1000-Chop
+  threshold forever (Prompt 3.1/5.1's version) meant each successive
+  prestige cycle would get roughly quadratically faster and collapse
+  toward "prestige every few seconds," which contradicts "not mandatory
+  every five minutes." New `UpgradeConfig.prestige_threshold_for_level()`
+  grows the threshold itself (`PRESTIGE_BASE_THRESHOLD = 1000`,
+  `PRESTIGE_THRESHOLD_GROWTH = 1.3` per level) to counteract that, and
+  `PRESTIGE_MULTIPLIER_PER_LEVEL` moved from `0.1` to `0.18` (still
+  linear: `1.0 + level * 0.18`). Simulated across 8 prestige cycles with
+  greedy upgrade-buying: cycle times landed in a stable ~385-535 second
+  band (~6.5-9 minutes), inside the doc's 5-15 minute target, instead of
+  drifting anywhere near instant.
+- **Every remaining hardcoded balance number centralized into
+  `UpgradeConfig`**, per the design doc's own Prompt 5.2 line ("Expose
+  all key constants — damage scaling, cost scaling, enchantment chances,
+  elemental multipliers — in one place"), which `UpgradeConfig` had only
+  partly done since Prompt 3.1:
+  - `TreeData.elemental_multiplier()` (`scripts/tree_data.gd`) now reads
+    `UpgradeConfig.ELEMENT_MATCH_MULTIPLIER` (1.5) / `ELEMENT_RESIST_MULTIPLIER`
+    (0.65) instead of inline `1.5`/`0.65` literals. Values unchanged,
+    only centralized.
+  - `EnchantmentData`'s four static constructors (`scripts/enchantment_data.gd`)
+    now read `UpgradeConfig.EMPOWERED_TREES`/`EMPOWERED_MULTIPLIER`,
+    `GOLD_RUSH_TREES`/`GOLD_RUSH_MULTIPLIER`, `AUTO_BOOST_SECONDS`/
+    `AUTO_BOOST_MULTIPLIER` instead of inline literals (values unchanged:
+    5 trees at +40%, next tree at 3x, 20s at +50%). Their description
+    text is now generated from those same constants instead of a
+    separately hand-written number, so the two can never drift apart.
+  - `EnchantmentData.GRANT_CHANCE` / `MILESTONE_INTERVAL` moved to
+    `UpgradeConfig.ENCHANTMENT_GRANT_CHANCE` / `ENCHANTMENT_MILESTONE_INTERVAL`
+    (values unchanged: 18% flat, guaranteed every 10th kill).
+    `GameState._maybe_grant_enchantment()` updated to match.
+  - Left deliberately unchanged (already reasonable, no evidence they
+    were the problem): `BETTER_AXE_*`, `AUTO_CHOPPER_*`,
+    `ELEMENT_POWER_COST`/`ELEMENT_POWER_TREES`.
+- Out of scope on purpose: this was tuning only, no new upgrade types,
+  enchantment kinds, or UI. `scripts/main.gd` needed one small change
+  (the not-ready `PrestigeHint` text now calls
+  `UpgradeConfig.prestige_threshold_for_level(GameState.prestige_level)`
+  instead of a flat constant, so it still shows the right number now
+  that the threshold scales).
+
 ### Not done
 
 - **Playtest pass** (NEXT, still outstanding): none of Prompts 2.2
@@ -285,21 +351,29 @@ already covered.
   resets the run and shows the centered `PrestigeBanner`, and the
   not-ready `PrestigeHint` text ("x1.0 -> x1.1 at 1000") does not clip
   at its 12px font size inside the button's width.
-- Phase 5+: balance and progression curve (Prompt 5.2), save/load
-  (Prompt 5.3), mobile export. A mute control that calls
-  AudioManager.set_music_muted still has no UI home; it can land with
-  6.1 mobile polish without changing 4.2.
+- Phase 5+: save/load (Prompt 5.3), mobile export. A mute control that
+  calls AudioManager.set_music_muted still has no UI home; it can land
+  with 6.1 mobile polish without changing 4.2.
+- Prompt 5.2's new constants (tree scaling, prestige threshold growth)
+  are simulation-validated (python, greedy-upgrade-buying model), not
+  confirmed by an actual playtest in Godot. The simulation cannot see
+  "does this feel good," only the numeric pacing — the playtest pass
+  below should specifically sanity-check that the new fast opening and
+  the prestige cadence feel right, not just that they hit the target
+  seconds.
 
 ---
 
 ## What is next
 
-Phase 4 (juice, audio, UI polish) and Prompt 5.1 (prestige UX) are both
-implemented per `mobile/readme.md`, but **none of Prompts 4.1 through
-5.1 has been playtested in a real Godot editor yet** (see "Not done"
-above) — that gate was explicitly skipped for 5.1, not satisfied. Open
-the project in a real Godot editor and playtest all of it together
-before starting Prompt 5.2 (balance and progression curve).
+Phase 4 (juice, audio, UI polish), Prompt 5.1 (prestige UX), and Prompt
+5.2 (balance and progression curve) are all implemented per
+`mobile/readme.md`, but **none of Prompts 4.1 through 5.2 has been
+playtested in a real Godot editor yet** (see "Not done" above) — that
+gate was explicitly skipped for 5.1 and 5.2, not satisfied. Open the
+project in a real Godot editor and playtest all of it together —
+especially the new tree/prestige pacing from 5.2 — before starting
+Prompt 5.3 (save/load).
 
 ---
 
@@ -320,23 +394,27 @@ indicators), Prompt 3.3 (the enchantment system), Prompt 4.1 (multi-stage
 axe-swing tween, tree shake, paired leaf/chip particles, smooth health bar,
 floating "+X Chops"), Prompt 4.2 (AudioManager autoload), Prompt 4.3
 (pressed/disabled button styles, unaffordable cost text, pulsing Prestige
-button, idle preview cards, safe-area insets), and Prompt 5.1 (prestige
+button, idle preview cards, safe-area insets), Prompt 5.1 (prestige
 UX: currency/multiplier display, always-on multiplier preview, a
 confirmation dialog before resetting, and a post-prestige summary
-banner). None of Prompts 2.2 through 5.1 has been confirmed playtested in
-a real Godot editor session. Prompt 5.1 was done at the user's explicit
-request to skip that playtest gate rather than wait for it. Playtest
-4.1–5.1 together (disabled upgrade look + red costs, Prestige pulse on
-unlock, staggered preview idle, notches not covering UI, the new
-PrestigeConfirmDialog + PrestigeBanner flow) and fix anything that feels
-off before moving on.
+banner), and Prompt 5.2 (balance and progression curve: faster/cheaper
+early trees, a per-cycle-growing prestige threshold so cycles don't
+collapse toward instant, and every remaining balance constant —
+elemental multipliers, enchantment chances/magnitudes — centralized
+into UpgradeConfig). None of Prompts 2.2 through 5.2 has been confirmed
+playtested in a real Godot editor session. Prompts 5.1 and 5.2 were both
+done at the user's explicit request to skip that playtest gate rather
+than wait for it. Playtest 4.1–5.2 together (disabled upgrade look + red
+costs, Prestige pulse on unlock, staggered preview idle, notches not
+covering UI, the PrestigeConfirmDialog + PrestigeBanner flow, and
+especially whether the new faster tree pacing and prestige cadence from
+5.2 actually feel good, not just hit the target numbers on paper) and
+fix anything that feels off before moving on.
 
-Do Prompt 5.2 from mobile/readme.md (Phase 5): balance and progression
-curve. Tune constants (in scripts/upgrade_config.gd and similar) so early
-game feels fast, mid game has a real Element Power vs. enchantment
-decision, prestige feels meaningful but not mandatory every five minutes,
-and a normal session runs 5-15 minutes before someone wants to prestige
-or stop. Expose all key tunable constants (damage scaling, cost scaling,
-enchantment chances, elemental multipliers) in one place. Keep changes
-inside ChopperMobile. Do not start Prompt 5.3.
+Do Prompt 5.3 from mobile/readme.md (Phase 5): save/load. Implement
+robust local saving of total chops, all upgrade levels, prestige level
+and multiplier, current tree and upcoming queue, active enchantments and
+element, and audio settings, using Godot's ConfigFile or a simple JSON
+save. Auto-save after every tree kill and after every upgrade purchase.
+Keep changes inside ChopperMobile. Do not start Phase 6.
 ```

@@ -248,7 +248,7 @@ func buy_element_power() -> bool:
 
 
 func can_prestige() -> bool:
-	return chops >= UpgradeConfig.PRESTIGE_CHOP_THRESHOLD
+	return chops >= UpgradeConfig.prestige_threshold_for_level(prestige_level)
 
 
 ## Core prestige reset from Prompt 3.1 (become available past a threshold,
@@ -356,13 +356,13 @@ func _tick_enchantments_by_time(delta: float) -> void:
 
 
 ## Called once per kill. Guarantees an enchantment every
-## EnchantmentData.MILESTONE_INTERVAL-th kill; otherwise a flat
-## EnchantmentData.GRANT_CHANCE chance. Returns the granted
+## UpgradeConfig.ENCHANTMENT_MILESTONE_INTERVAL-th kill; otherwise a flat
+## UpgradeConfig.ENCHANTMENT_GRANT_CHANCE chance. Returns the granted
 ## EnchantmentData (for the one-shot "you got X!" banner) or null.
 func _maybe_grant_enchantment() -> EnchantmentData:
 	_trees_chopped_total += 1
-	var guaranteed := _trees_chopped_total % EnchantmentData.MILESTONE_INTERVAL == 0
-	if not guaranteed and randf() > EnchantmentData.GRANT_CHANCE:
+	var guaranteed := _trees_chopped_total % UpgradeConfig.ENCHANTMENT_MILESTONE_INTERVAL == 0
+	if not guaranteed and randf() > UpgradeConfig.ENCHANTMENT_GRANT_CHANCE:
 		return null
 	return _grant_random_enchantment()
 

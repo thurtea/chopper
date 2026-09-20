@@ -20,9 +20,9 @@ static func make(level: int, element_type: Element, stars: int) -> TreeData:
 	tree.tree_level = maxi(level, 1)
 	tree.element = element_type
 	tree.difficulty = clampi(stars, 1, 3)
-	tree.max_health = 80 + (tree.tree_level * 20) * tree.difficulty
+	tree.max_health = UpgradeConfig.tree_max_health(tree.tree_level, tree.difficulty)
 	tree.health = tree.max_health
-	tree.chop_reward = 5 * tree.tree_level * tree.difficulty
+	tree.chop_reward = UpgradeConfig.tree_chop_reward(tree.tree_level, tree.difficulty)
 	return tree
 
 
@@ -88,7 +88,7 @@ static func elemental_multiplier(attack: Element, defend: Element) -> float:
 	if attack == Element.NONE or defend == Element.NONE:
 		return 1.0
 	if attack == defend:
-		return 1.5
+		return UpgradeConfig.ELEMENT_MATCH_MULTIPLIER
 	var beats := {
 		Element.FIRE: Element.ICE,
 		Element.ICE: Element.BOLT,
@@ -97,7 +97,7 @@ static func elemental_multiplier(attack: Element, defend: Element) -> float:
 		Element.WIND: Element.FIRE,
 	}
 	if beats.get(attack) == defend:
-		return 1.5
+		return UpgradeConfig.ELEMENT_MATCH_MULTIPLIER
 	if beats.get(defend) == attack:
-		return 0.65
+		return UpgradeConfig.ELEMENT_RESIST_MULTIPLIER
 	return 1.0

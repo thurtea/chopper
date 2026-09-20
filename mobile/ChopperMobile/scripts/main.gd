@@ -298,9 +298,12 @@ func _refresh_upgrade_buttons(chopper: ChopperData) -> void:
 	else:
 		# Prompt 5.1: always preview the multiplier payoff, not just the
 		# Chops threshold, so the player can weigh "is this worth resetting
-		# my run for" before they are even close to affording it.
+		# my run for" before they are even close to affording it. Prompt
+		# 5.2: the threshold itself now grows per prestige level, so this
+		# reads the current level's own threshold rather than a flat number.
+		var threshold := UpgradeConfig.prestige_threshold_for_level(GameState.prestige_level)
 		prestige_hint.text = "x%.1f -> x%.1f at %d" % [
-			chopper.prestige_multiplier, next_multiplier, UpgradeConfig.PRESTIGE_CHOP_THRESHOLD
+			chopper.prestige_multiplier, next_multiplier, threshold
 		]
 		_set_cost_color(prestige_hint, COST_MUTED)
 	prestige_button.disabled = not prestige_ready
