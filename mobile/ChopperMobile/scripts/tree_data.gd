@@ -72,3 +72,25 @@ static func display_name(element_type: Element) -> String:
 			return "Wind"
 		_:
 			return "None"
+
+
+## Five-element wheel for Element Power bonuses (Prompt 2.2/3.2): Fire beats
+## Ice, Ice beats Bolt, Bolt beats Earth, Earth beats Wind, Wind beats Fire.
+## A closed loop so every element has exactly one favourable and one
+## unfavourable matchup. NONE on either side, or a matching element, is
+## always neutral.
+static func elemental_multiplier(attack: Element, defend: Element) -> float:
+	if attack == Element.NONE or defend == Element.NONE or attack == defend:
+		return 1.0
+	var beats := {
+		Element.FIRE: Element.ICE,
+		Element.ICE: Element.BOLT,
+		Element.BOLT: Element.EARTH,
+		Element.EARTH: Element.WIND,
+		Element.WIND: Element.FIRE,
+	}
+	if beats.get(attack) == defend:
+		return 1.5
+	if beats.get(defend) == attack:
+		return 0.65
+	return 1.0
