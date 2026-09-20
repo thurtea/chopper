@@ -14,7 +14,7 @@ Godot is not installed in the Claude/Cursor sandbox. Edit files here, then open
 
 ### Done
 
-**Web toolkit** (`index.html`, `main.js`, `main.css`, staff tools) — separate from the mobile game.
+**Web toolkit** (`index.html`, `main.js`, `main.css`, staff tools): separate from the mobile game.
 
 **ChopperMobile Phase 1 + 2.1**
 
@@ -79,26 +79,52 @@ Godot is not installed in the Claude/Cursor sandbox. Edit files here, then open
   disable themselves (`Button.disabled`) whenever the player cannot afford
   them; cost/status labels (`AxeCost`, `AutoCost`, `ElementCost`,
   `PrestigeHint`) show live values instead of Prompt 1.2's static text.
-- **Placeholder, flagged for Prompt 3.2:** which element Element Power
-  activates is a random pick (`buy_element_power()`). The five
-  Fire/Ice/Bolt/Earth/Wind buttons in the bottom panel still do nothing;
-  wiring them up as the real selector is explicitly Prompt 3.2's own task
-  ("The five elemental buttons ... select which element will be used when
-  the player buys Element Power").
+- Was a placeholder as of Prompt 3.1: which element Element Power activates
+  was a random pick, and the five Fire/Ice/Bolt/Earth/Wind buttons did
+  nothing. Both resolved in Prompt 3.2, see below.
+
+**ChopperMobile Prompt 3.2: Elemental system**
+
+- `GameState.select_element()` (new): the five Fire/Ice/Bolt/Earth/Wind
+  buttons now call this on press, setting `chopper.selected_element`.
+  `buy_element_power()` uses that real selection instead of Prompt 3.1's
+  random placeholder, and now fails (like an unaffordable purchase) if
+  nothing is selected yet.
+- The five buttons are real single-select toggles now (`toggle_mode` +
+  a shared `ButtonGroup` in `scenes/main.tscn`), so whichever element is
+  selected stays visibly pressed in its own color (the per-element
+  pressed StyleBoxFlat resources already existed from Phase 1.2, unused
+  until now). `main.gd`'s `_refresh_element_buttons()` keeps this in sync
+  with `chopper.selected_element`, including resetting the buttons after
+  a Prestige Reset clears the selection.
+- **Bug fix surfaced while wiring this up:** `TreeData.elemental_multiplier()`
+  (Prompt 2.2) treated attacking with the *same* element the tree has as
+  neutral. The design doc's own Prompt 3.2 wording ("Matching element =
+  bonus damage") makes clear that is wrong: matching now correctly
+  returns the bonus multiplier. Opposing/neutral logic (the five-element
+  wheel) is unchanged.
+- New visual indicators, both in `main.gd`'s `_refresh_ui()`:
+  - **Chopper**: new `ChopperElementBadge` label above Chopper (new
+    `ChopperColumn` wrapper in `scenes/main.tscn`, mirroring
+    `TreeColumn`'s existing label-above-sprite layout). Shows
+    "`<Element> Power (N left)`" in that element's color while active,
+    empty otherwise.
+  - **Tree**: the existing `TreeElementBadge` (already showing the
+    tree's own element since Phase 1.2) now also appends "(Weak!)" in
+    gold or "(Resist)" in grey when Element Power is active and the
+    matchup is favourable or unfavourable, so the player can read the
+    actual strategic payoff at a glance.
 
 ### Not done
 
-- **Playtest pass** (NEXT): none of Prompts 2.2, 2.3, or 3.1 has been
+- **Playtest pass** (NEXT): none of Prompts 2.2 through 3.2 has been
   opened in a real Godot editor yet (Godot is not installed in this
-  sandbox). Beyond the Phase 2 checks already noted, buy each of the four
-  upgrades a few times and confirm: costs rise as expected, buttons grey
-  out at zero Chops, Auto Chopper actually ticks Chops up over time,
-  Element Power visibly changes damage against a matching/opposing tree,
-  and Prestige Reset (grind to 1000 Chops, or edit `chops` in the debugger
-  to test faster) resets the run and raises the multiplier shown in
-  `PrestigeHint`.
-- Prompt 3.2: elemental system (the five element buttons actually select
-  Element Power's element; visual indicators on Chopper/tree)
+  sandbox). Beyond the earlier checks, tap a Fire/Ice/Bolt/Earth/Wind
+  button and confirm it visibly stays pressed and the others release,
+  buy Element Power and confirm both new badges appear and read
+  correctly, and check damage against a matching vs. an opposing tree
+  element to confirm the "(Weak!)"/"(Resist)" tags line up with the
+  actual damage dealt.
 - Prompt 3.3: enchantment system
 - Phase 4+: juice/audio polish, prestige UX, save/load, mobile export
 
@@ -106,12 +132,12 @@ Godot is not installed in the Claude/Cursor sandbox. Edit files here, then open
 
 ## What is next
 
-Open the project in a real Godot 4.3+ editor and playtest Prompts 2.2, 2.3,
-and 3.1 together (see "Not done" above). Once that feels right, move to
-**Prompt 3.2** from `mobile/readme.md`: wire the five Fire/Ice/Bolt/Earth/
-Wind buttons as the real Element Power selector (replacing
-`buy_element_power()`'s current random pick), and add the visual indicators
-on Chopper and the current tree the design doc asks for.
+Open the project in a real Godot 4.3+ editor and playtest Prompts 2.2
+through 3.2 together (see "Not done" above). Once that feels right, move
+to **Prompt 3.3** from `mobile/readme.md`: the enchantment system
+(Empowered, Elemental Surge, Gold Rush, Auto Boost), each with a chance
+or milestone trigger after a tree falls, a popup/banner, and small active
+icons.
 
 ---
 
@@ -126,19 +152,23 @@ Full design + prompt sequence: mobile/readme.md
 Session history: tomorrow.md (this file) and mobile/tomorrow.md.
 
 Done: project scaffold, wooden-themed main UI, data models, GameState autoload,
-Prompt 2.2 (manual chopping), Prompt 2.3 (weighted tree generation), and
-Prompt 3.1 (the four core upgrades: Better Axe, Auto Chopper, Element Power,
-Prestige Reset, all costs/values in scripts/upgrade_config.gd, buttons that
-disable when unaffordable). None of this has been playtested in a real Godot
+Prompt 2.2 (manual chopping), Prompt 2.3 (weighted tree generation), Prompt 3.1
+(the four core upgrades, costs/values in scripts/upgrade_config.gd), and
+Prompt 3.2 (the five element buttons are real single-select toggles wired to
+GameState.select_element()/buy_element_power(), plus visual indicators: a new
+ChopperElementBadge label and an enriched TreeElementBadge showing Weak!/Resist).
+Also fixed a Prompt 2.2 bug along the way: TreeData.elemental_multiplier()
+now treats a matching element as a bonus, not neutral, per the design doc's
+own Prompt 3.2 wording. None of this has been playtested in a real Godot
 editor yet (not installed in this sandbox). Do that first and fix anything
 that feels off before moving on.
 
-One known placeholder from Prompt 3.1: buy_element_power() (autoload/
-game_state.gd) picks a random element instead of reading player choice,
-since the five Fire/Ice/Bolt/Earth/Wind buttons are not wired up yet.
-
-Do Prompt 3.2 from mobile/readme.md (Phase 3): wire those five buttons as
-the real Element Power selector, and add a clear visual indicator on Chopper
-and on the current tree when an element is active. Keep changes inside
+Do Prompt 3.3 from mobile/readme.md (Phase 3): the enchantment system.
+EnchantmentData already exists (scripts/enchantment_data.gd) with its four
+kinds (Empowered, Elemental Surge, Gold Rush, Auto Boost) and static
+constructors, but nothing grants, applies, displays, or expires them yet.
+Wire a chance/milestone trigger after a tree falls, apply each kind's real
+effect, show a popup or banner plus small active-icons, and expire them
+correctly (remaining_trees vs. remaining_seconds). Keep changes inside
 ChopperMobile.
 ```

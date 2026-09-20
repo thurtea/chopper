@@ -14,29 +14,28 @@ Source of truth for the full prompt sequence: `readme.md` in this same `mobile/`
 
 ## Snapshot (2026-09-20)
 
-**Done:** Prompts 1.1, 1.2, 2.1, 2.2, 2.3, 3.1: scaffold, wooden UI, data
-models, GameState, manual chopping, weighted queue generation, and the four
-core upgrades. Tapping the tree deals damage, shows floating numbers, shakes
-the screen, bursts particles, plays a hit sound, and on kill plays a
-tree-fall animation, awards Chops, and pulls the next tree from the queue
-(element weighted via `GameState._pick_weighted_element()`, NONE trees a
-deliberate minority). Better Axe, Auto Chopper, Element Power, and Prestige
-Reset are all buyable, all costs/values live in
+**Done:** Prompts 1.1, 1.2, 2.1, 2.2, 2.3, 3.1, 3.2: scaffold, wooden UI,
+data models, GameState, manual chopping, weighted queue generation, the
+four core upgrades, and the elemental system. Tapping the tree deals
+damage, shows floating numbers, shakes the screen, bursts particles, plays
+a hit sound, and on kill plays a tree-fall animation, awards Chops, and
+pulls the next tree from the queue. Better Axe, Auto Chopper, Element
+Power, and Prestige Reset are all buyable, all costs/values live in
 `scripts/upgrade_config.gd`, and their buttons disable when unaffordable.
-Auto Chopper actually ticks Chops in over time now (`GameState._process()`).
+The five Fire/Ice/Bolt/Earth/Wind buttons are now real single-select
+toggles (`GameState.select_element()`) that decide what Element Power
+activates, and two new visual indicators show it: a badge above Chopper,
+and "(Weak!)"/"(Resist)" appended to the tree's own element badge. Also
+fixed a bug found along the way: matching elements now correctly count as
+a damage bonus, not neutral (`TreeData.elemental_multiplier()`).
 App icon = `chopper-logo.jpg`.
 
-Known placeholder: `buy_element_power()` picks a random element rather than
-reading player choice, since the five Fire/Ice/Bolt/Earth/Wind buttons are
-not wired up yet. That is Prompt 3.2's job.
-
-None of Prompts 2.2, 2.3, or 3.1 have been opened in the Godot editor to
+None of Prompts 2.2 through 3.2 have been opened in the Godot editor to
 playtest yet (Godot is not installed in this sandbox). Needs a real
-playtest pass, including buying each upgrade and confirming Auto Chopper
-and Prestige actually work as expected, before starting Prompt 3.2.
+playtest pass, including confirming the element buttons visibly toggle
+and both new badges read correctly, before starting Prompt 3.3.
 
-**Next:** playtest Phase 2 + Prompt 3.1, then Prompt 3.2 (Phase 3): wire the
-five element buttons as the real Element Power selector, plus visual
-indicators on Chopper and the current tree when an element is active.
+**Next:** playtest Phase 2 + Phase 3 so far, then Prompt 3.3 (Phase 3): the
+enchantment system (Empowered, Elemental Surge, Gold Rush, Auto Boost).
 
 Paste the resume prompt from `../tomorrow.md` into Claude Code / Cursor.

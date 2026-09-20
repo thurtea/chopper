@@ -77,11 +77,18 @@ static func display_name(element_type: Element) -> String:
 ## Five-element wheel for Element Power bonuses (Prompt 2.2/3.2): Fire beats
 ## Ice, Ice beats Bolt, Bolt beats Earth, Earth beats Wind, Wind beats Fire.
 ## A closed loop so every element has exactly one favourable and one
-## unfavourable matchup. NONE on either side, or a matching element, is
-## always neutral.
+## unfavourable matchup against a different element. NONE on either side is
+## always neutral. Corrected for Prompt 3.2, whose own design-doc wording
+## ("Matching element = bonus damage. Opposing element = reduced damage.
+## Neutral = normal damage.") makes explicit what Prompt 2.2's own version
+## of this function got wrong: attacking with the same element the tree
+## has is "Matching" (a bonus), not neutral. "Neutral" is reserved for
+## NONE on either side, or two different, non-opposing elements.
 static func elemental_multiplier(attack: Element, defend: Element) -> float:
-	if attack == Element.NONE or defend == Element.NONE or attack == defend:
+	if attack == Element.NONE or defend == Element.NONE:
 		return 1.0
+	if attack == defend:
+		return 1.5
 	var beats := {
 		Element.FIRE: Element.ICE,
 		Element.ICE: Element.BOLT,

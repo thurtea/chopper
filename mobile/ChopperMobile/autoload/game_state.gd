@@ -199,22 +199,26 @@ func buy_auto_chopper() -> bool:
 	return true
 
 
+## Prompt 3.2: the five Fire/Ice/Bolt/Earth/Wind buttons call this to set
+## which element Element Power will activate on the next purchase.
+func select_element(element: TreeData.Element) -> void:
+	chopper.selected_element = element
+	stats_changed.emit()
+
+
 ## Activates Element Power for the next UpgradeConfig.ELEMENT_POWER_TREES
-## trees. Which element gets activated is a placeholder random pick: the
-## five Fire/Ice/Bolt/Earth/Wind buttons already exist in the scene but
-## wiring them up as the real selector is explicitly Prompt 3.2's job
-## ("The five elemental buttons ... select which element will be used
-## when the player buys Element Power"), not started here.
+## trees, using whichever element select_element() last set. Requires a
+## selection first (Prompt 2.2's own placeholder random pick is gone as of
+## Prompt 3.2): with no element chosen, there is nothing meaningful to
+## activate, so this fails the same way an unaffordable purchase does.
 func buy_element_power() -> bool:
+	if chopper.selected_element == TreeData.Element.NONE:
+		return false
 	if chops < UpgradeConfig.ELEMENT_POWER_COST:
 		return false
 	chops -= UpgradeConfig.ELEMENT_POWER_COST
 	element_power_level += 1
-	var elements: Array[TreeData.Element] = [
-		TreeData.Element.FIRE, TreeData.Element.ICE, TreeData.Element.BOLT,
-		TreeData.Element.EARTH, TreeData.Element.WIND,
-	]
-	chopper.active_element = elements[randi() % elements.size()]
+	chopper.active_element = chopper.selected_element
 	chopper.element_trees_remaining = UpgradeConfig.ELEMENT_POWER_TREES
 	stats_changed.emit()
 	return true

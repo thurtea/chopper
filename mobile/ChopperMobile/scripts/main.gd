@@ -16,6 +16,12 @@ extends Control
 @onready var element_power_button: Button = %ElementPower
 @onready var prestige_button: Button = %PrestigeReset
 @onready var prestige_hint: Label = %PrestigeHint
+@onready var fire_button: Button = %Fire
+@onready var ice_button: Button = %Ice
+@onready var bolt_button: Button = %Bolt
+@onready var earth_button: Button = %Earth
+@onready var wind_button: Button = %Wind
+@onready var chopper_element_badge: Label = %ChopperElementBadge
 @onready var play_inner: Control = %PlayInner
 @onready var tree_sprite: TextureRect = %TreeSprite
 @onready var chopper_sprite: TextureRect = %ChopperSprite
@@ -35,6 +41,11 @@ func _ready() -> void:
 	auto_chopper_button.pressed.connect(func() -> void: GameState.buy_auto_chopper())
 	element_power_button.pressed.connect(func() -> void: GameState.buy_element_power())
 	prestige_button.pressed.connect(func() -> void: GameState.prestige_reset())
+	fire_button.pressed.connect(func() -> void: GameState.select_element(TreeData.Element.FIRE))
+	ice_button.pressed.connect(func() -> void: GameState.select_element(TreeData.Element.ICE))
+	bolt_button.pressed.connect(func() -> void: GameState.select_element(TreeData.Element.BOLT))
+	earth_button.pressed.connect(func() -> void: GameState.select_element(TreeData.Element.EARTH))
+	wind_button.pressed.connect(func() -> void: GameState.select_element(TreeData.Element.WIND))
 	_refresh_ui()
 
 
@@ -71,16 +82,55 @@ func _refresh_ui() -> void:
 	cps_value.text = "%.1f" % (chopper.auto_chop_rate * chopper.prestige_multiplier)
 	tree_level_value.text = str(tree.tree_level)
 	tree_level_badge.text = "Lv. %d" % tree.tree_level
-	tree_element_badge.text = GameState.element_display_name(tree.element)
-	tree_element_badge.add_theme_color_override(
-		"font_color",
-		GameState.element_color(tree.element).lightened(0.2)
-	)
 	health_bar.max_value = tree.max_health
 	health_bar.value = tree.health
 	prestige_badge.text = "Prestige %d" % GameState.prestige_level
+	_refresh_tree_element_badge(tree, chopper)
+	_refresh_chopper_element_badge(chopper)
 	_refresh_upgrade_buttons(chopper)
+	_refresh_element_buttons(chopper)
 	_refresh_previews()
+
+
+## Prompt 3.2: when Element Power is active, the existing tree element
+## badge also shows whether the active element is favourable or
+## unfavourable against this specific tree, the actual "should I push or
+## prepare" information the design doc's strategic hook depends on. With
+## no Element Power active, this is unchanged from Prompt 1.2: just the
+## tree's own element.
+func _refresh_tree_element_badge(tree: TreeData, chopper: ChopperData) -> void:
+	var base_text := GameState.element_display_name(tree.element)
+	var base_color := GameState.element_color(tree.element).lightened(0.2)
+	if not chopper.has_element_power():
+		tree_element_badge.text = base_text
+		tree_element_badge.add_theme_color_override("font_color", base_color)
+		return
+	var multiplier := TreeData.elemental_multiplier(chopper.active_element, tree.element)
+	if multiplier > 1.0:
+		tree_element_badge.text = base_text + " (Weak!)"
+		tree_element_badge.add_theme_color_override("font_color", Color(1, 0.86, 0.3, 1))
+	elif multiplier < 1.0:
+		tree_element_badge.text = base_text + " (Resist)"
+		tree_element_badge.add_theme_color_override("font_color", Color(0.75, 0.75, 0.8, 1))
+	else:
+		tree_element_badge.text = base_text
+		tree_element_badge.add_theme_color_override("font_color", base_color)
+
+
+## Prompt 3.2's own "clear visual indicator on Chopper ... when an
+## element is active": empty (so nothing shows) whenever Element Power
+## is not active.
+func _refresh_chopper_element_badge(chopper: ChopperData) -> void:
+	if chopper.has_element_power():
+		chopper_element_badge.text = "%s Power (%d left)" % [
+			GameState.element_display_name(chopper.active_element),
+			chopper.element_trees_remaining,
+		]
+		chopper_element_badge.add_theme_color_override(
+			"font_color", GameState.element_color(chopper.active_element).lightened(0.3)
+		)
+	else:
+		chopper_element_badge.text = ""
 
 
 ## Prompt 3.1: real costs (from UpgradeConfig) and afford-gated buttons,
@@ -96,9 +146,14 @@ func _refresh_upgrade_buttons(chopper: ChopperData) -> void:
 
 	if chopper.has_element_power():
 		element_cost.text = "Active: %d left" % chopper.element_trees_remaining
+	elif chopper.selected_element == TreeData.Element.NONE:
+		element_cost.text = "Pick an element"
 	else:
 		element_cost.text = "Cost: %d" % UpgradeConfig.ELEMENT_POWER_COST
-	element_power_button.disabled = GameState.chops < UpgradeConfig.ELEMENT_POWER_COST
+	element_power_button.disabled = (
+		GameState.chops < UpgradeConfig.ELEMENT_POWER_COST
+		or chopper.selected_element == TreeData.Element.NONE
+	)
 
 	var prestige_ready := GameState.can_prestige()
 	if prestige_ready:
@@ -107,6 +162,19 @@ func _refresh_upgrade_buttons(chopper: ChopperData) -> void:
 	else:
 		prestige_hint.text = "Unlocks at %d" % UpgradeConfig.PRESTIGE_CHOP_THRESHOLD
 	prestige_button.disabled = not prestige_ready
+
+
+## Prompt 3.2: keeps the five element buttons' pressed/toggled look in
+## sync with chopper.selected_element. Needed beyond the buttons' own
+## click handling because prestige_reset() (Prompt 3.1) replaces chopper
+## with a fresh ChopperData, which silently un-selects everything without
+## the buttons themselves ever being clicked.
+func _refresh_element_buttons(chopper: ChopperData) -> void:
+	fire_button.button_pressed = chopper.selected_element == TreeData.Element.FIRE
+	ice_button.button_pressed = chopper.selected_element == TreeData.Element.ICE
+	bolt_button.button_pressed = chopper.selected_element == TreeData.Element.BOLT
+	earth_button.button_pressed = chopper.selected_element == TreeData.Element.EARTH
+	wind_button.button_pressed = chopper.selected_element == TreeData.Element.WIND
 
 
 func _refresh_previews() -> void:

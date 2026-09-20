@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Texture2D" path="res://assets/sprites/chopper.png" id="2_chopper"]
@@ -6,6 +6,8 @@
 [ext_resource type="Theme" path="res://assets/themes/chopper_theme.tres" id="4_theme"]
 [ext_resource type="PackedScene" path="res://scenes/tree_preview_card.tscn" id="5_preview"]
 [ext_resource type="AudioStream" path="res://assets/audio/axe-impact.mp3" id="6_hitsfx"]
+
+[sub_resource type="ButtonGroup" id="ElementButtonGroup"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fire"]
 bg_color = Color(0.86, 0.32, 0.22, 1)
@@ -376,11 +378,24 @@ expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
 
-[node name="ChopperSprite" type="TextureRect" parent="Margin/Layout/PlayArea/PlayInner/CenterStage/StageRow"]
+[node name="ChopperColumn" type="VBoxContainer" parent="Margin/Layout/PlayArea/PlayInner/CenterStage/StageRow"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="ChopperElementBadge" type="Label" parent="Margin/Layout/PlayArea/PlayInner/CenterStage/StageRow/ChopperColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.95, 0.7, 1)
+theme_override_font_sizes/font_size = 13
+text = ""
+horizontal_alignment = 1
+
+[node name="ChopperSprite" type="TextureRect" parent="Margin/Layout/PlayArea/PlayInner/CenterStage/StageRow/ChopperColumn"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(150, 210)
 layout_mode = 2
-size_flags_vertical = 8
 pivot_offset = Vector2(75, 170)
 texture = ExtResource("2_chopper")
 expand_mode = 1
@@ -472,9 +487,12 @@ theme_override_constants/separation = 10
 alignment = 1
 
 [node name="Fire" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(72, 72)
 layout_mode = 2
 size_flags_horizontal = 3
+toggle_mode = true
+button_group = SubResource("ElementButtonGroup")
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 12
 theme_override_styles/hover = SubResource("StyleBoxFlat_fire")
@@ -483,9 +501,12 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_fire")
 text = "FIRE"
 
 [node name="Ice" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(72, 72)
 layout_mode = 2
 size_flags_horizontal = 3
+toggle_mode = true
+button_group = SubResource("ElementButtonGroup")
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 12
 theme_override_styles/hover = SubResource("StyleBoxFlat_ice")
@@ -494,9 +515,12 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_ice")
 text = "ICE"
 
 [node name="Bolt" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(72, 72)
 layout_mode = 2
 size_flags_horizontal = 3
+toggle_mode = true
+button_group = SubResource("ElementButtonGroup")
 theme_override_colors/font_color = Color(0.2, 0.15, 0.05, 1)
 theme_override_font_sizes/font_size = 12
 theme_override_styles/hover = SubResource("StyleBoxFlat_bolt")
@@ -505,9 +529,12 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_bolt")
 text = "BOLT"
 
 [node name="Earth" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(72, 72)
 layout_mode = 2
 size_flags_horizontal = 3
+toggle_mode = true
+button_group = SubResource("ElementButtonGroup")
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 12
 theme_override_styles/hover = SubResource("StyleBoxFlat_earth")
@@ -516,9 +543,12 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_earth")
 text = "EARTH"
 
 [node name="Wind" type="Button" parent="Margin/Layout/BottomPanel/BottomInner/ElementRow"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(72, 72)
 layout_mode = 2
 size_flags_horizontal = 3
+toggle_mode = true
+button_group = SubResource("ElementButtonGroup")
 theme_override_colors/font_color = Color(0.12, 0.2, 0.12, 1)
 theme_override_font_sizes/font_size = 12
 theme_override_styles/hover = SubResource("StyleBoxFlat_wind")
