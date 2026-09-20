@@ -14,28 +14,26 @@ Source of truth for the full prompt sequence: `readme.md` in this same `mobile/`
 
 ## Snapshot (2026-09-20)
 
-**Done:** Prompts 1.1, 1.2, 2.1, 2.2, 2.3, 3.1, 3.2: scaffold, wooden UI,
-data models, GameState, manual chopping, weighted queue generation, the
-four core upgrades, and the elemental system. Tapping the tree deals
-damage, shows floating numbers, shakes the screen, bursts particles, plays
-a hit sound, and on kill plays a tree-fall animation, awards Chops, and
-pulls the next tree from the queue. Better Axe, Auto Chopper, Element
-Power, and Prestige Reset are all buyable, all costs/values live in
-`scripts/upgrade_config.gd`, and their buttons disable when unaffordable.
-The five Fire/Ice/Bolt/Earth/Wind buttons are now real single-select
-toggles (`GameState.select_element()`) that decide what Element Power
-activates, and two new visual indicators show it: a badge above Chopper,
-and "(Weak!)"/"(Resist)" appended to the tree's own element badge. Also
-fixed a bug found along the way: matching elements now correctly count as
-a damage bonus, not neutral (`TreeData.elemental_multiplier()`).
-App icon = `chopper-logo.jpg`.
+**Done:** Prompts 1.1 through 4.2. Phase 3 (core systems) is feature-complete.
+Prompt 4.1 replaced Prompt 2.2's rotation-only swing with a three-stage
+anticipation/hit/recovery tween, added a per-hit tree shake, paired
+leaf+chip particles, a smooth health bar, and floating "+X Chops". Prompt
+4.2 added autoload `AudioManager` (`ChopperMobile/autoload/audio_manager.gd`):
+every SFX goes through `play_*()` methods, Prompt 2.2's plain `HitSfx`
+node is gone, a quiet looping pad starts with the game, and volumes/mute
+save to `user://audio.cfg`. Tapping the tree plays swing+hit; a kill plays
+tree-fall+collect; a granted enchantment plays a reveal; a successful
+upgrade/prestige plays a purchase chime; element buttons play a UI click.
 
-None of Prompts 2.2 through 3.2 have been opened in the Godot editor to
-playtest yet (Godot is not installed in this sandbox). Needs a real
-playtest pass, including confirming the element buttons visibly toggle
-and both new badges read correctly, before starting Prompt 3.3.
+`project.godot` and a batch of `.import`/`.uid` files appeared untracked
+since an earlier session, with the feature tag bumped to Godot 4.7, meaning
+the project has been opened in a real local editor at some point, but
+whether any of Prompts 2.2 through 4.2 were actually played is not
+recorded. Confirm before assuming a real playtest pass already happened.
 
-**Next:** playtest Phase 2 + Phase 3 so far, then Prompt 3.3 (Phase 3): the
-enchantment system (Empowered, Elemental Surge, Gold Rush, Auto Boost).
+**Next:** playtest Prompt 4.1 juice and Prompt 4.2 audio in a real Godot
+editor, then Prompt 4.3 (UI polish: pressed/disabled states, unaffordable
+cost text, pulsing Prestige button, idle preview cards, safe-area
+handling). Do not start Phase 5 yet.
 
 Paste the resume prompt from `../tomorrow.md` into Claude Code / Cursor.

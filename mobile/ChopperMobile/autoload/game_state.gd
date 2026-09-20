@@ -31,6 +31,10 @@ var active_enchantments: Array[EnchantmentData] = []
 # without losing the fraction. See _process() below.
 var _auto_chop_accumulator: float = 0.0
 
+# Prompt 3.3: total tree kills this run, used only to decide when a
+# milestone-guaranteed enchantment is due. Not player-facing.
+var _trees_chopped_total: int = 0
+
 
 func _ready() -> void:
 	randomize()
@@ -49,13 +53,21 @@ func _ready() -> void:
 ## not an auto-clicking axe. Runs every frame automatically: a Node's
 ## _process() needs no explicit set_process(true) call to be enabled.
 func _process(delta: float) -> void:
+	_tick_enchantments_by_time(delta)
 	if chopper.auto_chop_rate <= 0.0:
 		return
-	_auto_chop_accumulator += chopper.auto_chop_rate * chopper.prestige_multiplier * delta
+	_auto_chop_accumulator += effective_auto_chop_rate() * delta
 	if _auto_chop_accumulator >= 1.0:
 		var whole := int(_auto_chop_accumulator)
 		_auto_chop_accumulator -= float(whole)
 		chops += whole
+
+
+## Real effective Chops/sec right now, including the prestige multiplier
+## and any active Auto Boost enchantment (Prompt 3.3). What the UI's CPS
+## display reads, so it never drifts from what _process() actually pays out.
+func effective_auto_chop_rate() -> float:
+	return chopper.auto_chop_rate * chopper.prestige_multiplier * _auto_boost_multiplier()
 
 
 func element_color(element: TreeData.Element) -> Color:
@@ -77,15 +89,21 @@ func chop_current_tree() -> Dictionary:
 		var multiplier := TreeData.elemental_multiplier(chopper.active_element, current_tree.element)
 		damage = maxi(1, int(round(damage * multiplier)))
 	damage = maxi(1, int(round(damage * chopper.prestige_multiplier)))
+	damage = maxi(1, int(round(damage * _empowered_multiplier())))
 	var applied := current_tree.take_damage(damage)
 	var fell := current_tree.is_fallen()
 	var reward := 0
+	var granted: EnchantmentData = null
 	if fell:
-		reward = maxi(1, int(round(current_tree.chop_reward * chopper.prestige_multiplier)))
+		reward = maxi(1, int(round(
+			current_tree.chop_reward * chopper.prestige_multiplier * _gold_rush_multiplier()
+		)))
 		chops += reward
 		_advance_tree()
+		_tick_enchantments_by_tree()
+		granted = _maybe_grant_enchantment()
 	stats_changed.emit()
-	return {"damage": applied, "fell": fell, "reward": reward}
+	return {"damage": applied, "fell": fell, "reward": reward, "enchantment": granted}
 
 
 ## Pops the next tree off the queue into current_tree and tops the queue
@@ -253,5 +271,121 @@ func prestige_reset() -> bool:
 	upcoming_trees.append(_generate_tree(2))
 	upcoming_trees.append(_generate_tree(3))
 	upcoming_trees.append(_generate_tree(4))
+	active_enchantments = []
+	_trees_chopped_total = 0
 	stats_changed.emit()
 	return true
+
+
+## Prompt 3.3: the enchantment system. Grants happen from chop_current_tree()
+## on a kill; ongoing effects (Empowered, Gold Rush, Auto Boost) are applied
+## by reading active_enchantments each time they matter (damage, reward,
+## auto-chop rate) and ticked down by tree kill or by time, whichever that
+## kind actually uses (EnchantmentData.is_expired() already only cares
+## about the one counter a given kind ever sets away from zero). Elemental
+## Surge is the one exception: it applies itself immediately by reusing the
+## existing Element Power mechanism (Prompt 3.1/3.2) instead of being
+## tracked here, since "free Element Power" already has a real
+## implementation, not a new one to build.
+
+func _empowered_multiplier() -> float:
+	var multiplier := 1.0
+	for enchantment in active_enchantments:
+		if enchantment.kind == EnchantmentData.Kind.EMPOWERED:
+			multiplier *= enchantment.magnitude
+	return multiplier
+
+
+func _gold_rush_multiplier() -> float:
+	var multiplier := 1.0
+	for enchantment in active_enchantments:
+		if enchantment.kind == EnchantmentData.Kind.GOLD_RUSH:
+			multiplier *= enchantment.magnitude
+	return multiplier
+
+
+func _auto_boost_multiplier() -> float:
+	var multiplier := 1.0
+	for enchantment in active_enchantments:
+		if enchantment.kind == EnchantmentData.Kind.AUTO_BOOST:
+			multiplier *= enchantment.magnitude
+	return multiplier
+
+
+## Counts down every active enchantment's remaining_trees by one (a
+## no-op for time-only kinds, whose remaining_trees stays 0), removing
+## any that are now expired. Called once per kill, after the kill's own
+## reward already read _gold_rush_multiplier(), so "the next tree" is
+## the tree that was just chopped, not the one after it.
+func _tick_enchantments_by_tree() -> void:
+	var i := active_enchantments.size() - 1
+	while i >= 0:
+		var enchantment: EnchantmentData = active_enchantments[i]
+		if enchantment.remaining_trees > 0:
+			enchantment.remaining_trees -= 1
+		if enchantment.is_expired():
+			active_enchantments.remove_at(i)
+		i -= 1
+
+
+## Same idea as _tick_enchantments_by_tree(), for the one time-based kind
+## (Auto Boost). Called every frame from _process(); emits stats_changed
+## only when something actually expired, so the active-enchantment icons
+## in the UI clear themselves promptly without spamming the signal every
+## single frame otherwise.
+func _tick_enchantments_by_time(delta: float) -> void:
+	var changed := false
+	var i := active_enchantments.size() - 1
+	while i >= 0:
+		var enchantment: EnchantmentData = active_enchantments[i]
+		if enchantment.remaining_seconds > 0.0:
+			enchantment.remaining_seconds -= delta
+		if enchantment.is_expired():
+			active_enchantments.remove_at(i)
+			changed = true
+		i -= 1
+	if changed:
+		stats_changed.emit()
+
+
+## Called once per kill. Guarantees an enchantment every
+## EnchantmentData.MILESTONE_INTERVAL-th kill; otherwise a flat
+## EnchantmentData.GRANT_CHANCE chance. Returns the granted
+## EnchantmentData (for the one-shot "you got X!" banner) or null.
+func _maybe_grant_enchantment() -> EnchantmentData:
+	_trees_chopped_total += 1
+	var guaranteed := _trees_chopped_total % EnchantmentData.MILESTONE_INTERVAL == 0
+	if not guaranteed and randf() > EnchantmentData.GRANT_CHANCE:
+		return null
+	return _grant_random_enchantment()
+
+
+func _grant_random_enchantment() -> EnchantmentData:
+	var kinds: Array[EnchantmentData.Kind] = [
+		EnchantmentData.Kind.EMPOWERED, EnchantmentData.Kind.ELEMENTAL_SURGE,
+		EnchantmentData.Kind.GOLD_RUSH, EnchantmentData.Kind.AUTO_BOOST,
+	]
+	var kind: EnchantmentData.Kind = kinds[randi() % kinds.size()]
+	match kind:
+		EnchantmentData.Kind.EMPOWERED:
+			var enchantment := EnchantmentData.empowered()
+			active_enchantments.append(enchantment)
+			return enchantment
+		EnchantmentData.Kind.GOLD_RUSH:
+			var enchantment := EnchantmentData.gold_rush()
+			active_enchantments.append(enchantment)
+			return enchantment
+		EnchantmentData.Kind.AUTO_BOOST:
+			var enchantment := EnchantmentData.auto_boost()
+			active_enchantments.append(enchantment)
+			return enchantment
+		_:
+			var elements: Array[TreeData.Element] = [
+				TreeData.Element.FIRE, TreeData.Element.ICE, TreeData.Element.BOLT,
+				TreeData.Element.EARTH, TreeData.Element.WIND,
+			]
+			var element: TreeData.Element = elements[randi() % elements.size()]
+			var enchantment := EnchantmentData.elemental_surge(element)
+			chopper.active_element = element
+			chopper.element_trees_remaining = UpgradeConfig.ELEMENT_POWER_TREES
+			return enchantment

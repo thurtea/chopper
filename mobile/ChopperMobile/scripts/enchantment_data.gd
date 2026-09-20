@@ -3,6 +3,13 @@ extends Resource
 
 ## A temporary buff granted after a tree falls.
 
+## Prompt 3.3's own tunable values for how often an enchantment is
+## granted: a flat per-kill chance, plus a guaranteed grant every Nth
+## kill so a long unlucky streak is never possible. GameState reads these
+## directly rather than duplicating them.
+const GRANT_CHANCE: float = 0.18
+const MILESTONE_INTERVAL: int = 10
+
 enum Kind { EMPOWERED, ELEMENTAL_SURGE, GOLD_RUSH, AUTO_BOOST }
 
 @export var kind: Kind = Kind.EMPOWERED

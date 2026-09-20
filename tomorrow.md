@@ -8,6 +8,14 @@ Design + prompt sequence: `mobile/readme.md`
 Godot is not installed in the Claude/Cursor sandbox. Edit files here, then open
 `mobile/ChopperMobile/project.godot` in a local Godot 4.3+ editor to playtest.
 
+Since the last session, `project.godot` and a batch of `.import`/`.uid` files
+showed up untracked in the working tree, bumping the project's feature tag to
+"4.7". That means the project has been opened in a real local Godot 4.7
+editor at some point. Whether Prompts 2.2 through 3.2 were actually
+playtested there, or the editor was just opened once, is not recorded here;
+confirm before assuming the "Not done: playtest pass" items below are
+already covered.
+
 ---
 
 ## Progress
@@ -41,9 +49,9 @@ Godot is not installed in the Claude/Cursor sandbox. Edit files here, then open
 - Floating damage numbers, axe-swing tween on `chopper.png` (anticipate ->
   hit -> recover), tree-fall tween + pop-in for the next tree, screen shake,
   and a leaf/wood-chip `CPUParticles2D` burst (bigger on kill) are all live.
-  Hit sound (`assets/audio/axe-impact.mp3`) plays via a plain
-  `AudioStreamPlayer` node. Prompt 4.2's dedicated AudioManager autoload can
-  replace this call site later without touching the chop logic itself.
+  Hit sound (`assets/audio/axe-impact.mp3`) originally played via a plain
+  `AudioStreamPlayer` node; Prompt 4.2 replaced that call site with
+  `AudioManager.play_hit()` / `play_swing()`.
 
 **ChopperMobile Prompt 2.3: Upcoming tree queue & preview**
 
@@ -115,29 +123,115 @@ Godot is not installed in the Claude/Cursor sandbox. Edit files here, then open
     matchup is favourable or unfavourable, so the player can read the
     actual strategic payoff at a glance.
 
+**ChopperMobile Prompt 3.3: Enchantment system**
+
+- Granting: `GameState._maybe_grant_enchantment()` runs once per kill
+  (inside `chop_current_tree()`, after `_advance_tree()`). Guaranteed
+  every `EnchantmentData.MILESTONE_INTERVAL` kills (10), otherwise a flat
+  `EnchantmentData.GRANT_CHANCE` chance (18%) per kill. Both constants
+  live on `EnchantmentData` itself, the natural home next to the four
+  static constructors they gate. The chosen kind is uniform-random among
+  all four.
+- Applying: Empowered and Gold Rush stay in `GameState.active_enchantments`
+  and are read as multipliers (`_empowered_multiplier()` on every hit's
+  damage, `_gold_rush_multiplier()` on a kill's reward) via the same
+  sequential-multiplier pattern the prestige multiplier already used.
+  Auto Boost is read the same way (`_auto_boost_multiplier()`) inside
+  the new `GameState.effective_auto_chop_rate()`, which both `_process()`
+  and the UI's CPS display now call, so the number on screen can never
+  drift from what actually gets paid out. Elemental Surge does not sit
+  in `active_enchantments` at all: granting it directly activates
+  Element Power (`chopper.active_element`/`element_trees_remaining`),
+  reusing the real Prompt 3.1/3.2 mechanism instead of building a
+  parallel one for "free Element Power."
+- Displaying: a new auto-dismissing `EnchantmentBanner` panel (fades in,
+  holds ~2.5s, fades out) shows the granted enchantment's own
+  `description` text on every grant. A new `EnchantmentIcons` row at the
+  top-right of the play area shows one small colored tag per entry in
+  `active_enchantments` (Elemental Surge never appears there, since it
+  already shows through the existing Chopper element badge from Prompt 3.2).
+- Expiring: `_tick_enchantments_by_tree()` (called on every kill) counts
+  down `remaining_trees`; `_tick_enchantments_by_time()` (called every
+  frame from `_process()`) counts down `remaining_seconds`. Both remove
+  an entry once `EnchantmentData.is_expired()` is true, which already
+  only cares about whichever one counter a given kind actually uses
+  (the other stays permanently 0), so no per-kind branching was needed
+  for expiry itself.
+- Prestige Reset now also clears `active_enchantments` and the internal
+  kill counter, alongside everything else it already reset.
+
+**ChopperMobile Prompt 4.1: Animation and particles**
+
+- Chopper's axe swing is now a three-stage tween (anticipation lean/wind-up
+  -> sharp hit squash -> overshoot recovery), replacing Prompt 2.2's
+  rotation-only placeholder. Still tween-only: there is no usable
+  swing spritesheet on disk (`chopper-axe.png` is a full illustration).
+  Rotation and scale only, because `chopper_sprite` is a container child
+  and animating `.position` would fight layout.
+- Tree shakes on a non-killing hit (`_shake_tree()`), distinct from the
+  existing tree-fall tween (kill) and the whole-screen `_shake()`.
+- Hit and kill each fire a matched pair of `CPUParticles2D`: brown
+  wood chips plus green drifting leaves, instead of Prompt 2.2's single
+  flat-color burst.
+- Floating "+X Chops" text on a kill (already had damage numbers;
+  Prompt 4.1's own reward text).
+- Health bar tweens down on further damage to the same tree, and snaps
+  to full when `current_tree` is a new Resource after a kill.
+
+**ChopperMobile Prompt 4.2: Audio**
+
+- New autoload `AudioManager` (`autoload/audio_manager.gd`), registered
+  next to `GameState` in `project.godot`. Owns every sound: an 8-player
+  SFX pool on an `SFX` bus (so rapid taps can overlap) and a dedicated
+  looping music player on a `Music` bus.
+- Removes Prompt 2.2's plain `HitSfx` `AudioStreamPlayer` from
+  `scenes/main.tscn`. `scripts/main.gd` now calls `AudioManager.play_*()`
+  instead of playing a node directly.
+- Recorded clips: `axe-impact.mp3` (hit / pitched-down fall) and
+  `axe-slash.mp3` (swing), both with random pitch variation. Everything
+  else (tree crack, collect, upgrade, enchantment, UI click, and a soft
+  looping pad used as BGM) is a short procedural `AudioStreamWAV`
+  generated at startup, so every `play_*()` has something to play
+  before dedicated files exist. Swap the stream assignments later;
+  the method names stay put.
+- Volumes and mute flags save to `user://audio.cfg` (ConfigFile) on
+  every change, independent of Prompt 5.3's full run save. There is no
+  mute button in the UI yet (that is Prompt 4.3 / later); the mute
+  APIs are live and persist across restarts.
+- Wired call sites: swing+hit on every chop, tree-fall+collect on kill,
+  enchantment reveal when granted, upgrade chime on a successful
+  `buy_*()` / prestige, UI click on the five element buttons. Auto
+  Chopper's passive CPS does not play collect, on purpose.
+
 ### Not done
 
-- **Playtest pass** (NEXT): none of Prompts 2.2 through 3.2 has been
-  opened in a real Godot editor yet (Godot is not installed in this
-  sandbox). Beyond the earlier checks, tap a Fire/Ice/Bolt/Earth/Wind
-  button and confirm it visibly stays pressed and the others release,
-  buy Element Power and confirm both new badges appear and read
-  correctly, and check damage against a matching vs. an opposing tree
-  element to confirm the "(Weak!)"/"(Resist)" tags line up with the
-  actual damage dealt.
-- Prompt 3.3: enchantment system
-- Phase 4+: juice/audio polish, prestige UX, save/load, mobile export
+- **Playtest pass** (NEXT): none of Prompts 2.2 through 4.2 has a
+  confirmed playtest recorded here (see the untracked-editor-files note
+  near the top of this file). For 4.2 specifically: tap the tree and
+  confirm swing+hit overlap without cutting off, fell a tree and hear
+  the heavier fall plus collect chime, buy an upgrade, tap an element
+  button, and grant an enchantment (or lower
+  `EnchantmentData.MILESTONE_INTERVAL` temporarily) to hear the reveal.
+  Confirm the quiet looping pad starts with the game and does not drown
+  the axe. If the procedural UI/collect/BGM tones feel cheap, that is
+  expected: they are stand-ins for recorded clips.
+- Prompt 4.3 (UI polish): pressed/disabled button states, unaffordable
+  cost text, pulsing Prestige button, idle preview-card animation,
+  safe-area handling. A mute control would naturally land here too,
+  calling the AudioManager mute APIs Prompt 4.2 already exposes.
+- Phase 5+: prestige UX, balance, save/load, mobile export
 
 ---
 
 ## What is next
 
-Open the project in a real Godot 4.3+ editor and playtest Prompts 2.2
-through 3.2 together (see "Not done" above). Once that feels right, move
-to **Prompt 3.3** from `mobile/readme.md`: the enchantment system
-(Empowered, Elemental Surge, Gold Rush, Auto Boost), each with a chance
-or milestone trigger after a tree falls, a popup/banner, and small active
-icons.
+Prompts 4.1 (animation/particles) and 4.2 (AudioManager) are in. Open
+the project in a real Godot editor and playtest the juice plus the new
+audio (see "Not done" above) before starting anything else. Once that
+feels right, **Prompt 4.3** is the rest of Phase 4: UI polish
+(pressed/disabled states, unaffordable cost text, pulsing Prestige
+button, idle preview-card animation, safe-area handling). Do not start
+Phase 5 until 4.3 is done.
 
 ---
 
@@ -153,22 +247,23 @@ Session history: tomorrow.md (this file) and mobile/tomorrow.md.
 
 Done: project scaffold, wooden-themed main UI, data models, GameState autoload,
 Prompt 2.2 (manual chopping), Prompt 2.3 (weighted tree generation), Prompt 3.1
-(the four core upgrades, costs/values in scripts/upgrade_config.gd), and
-Prompt 3.2 (the five element buttons are real single-select toggles wired to
-GameState.select_element()/buy_element_power(), plus visual indicators: a new
-ChopperElementBadge label and an enriched TreeElementBadge showing Weak!/Resist).
-Also fixed a Prompt 2.2 bug along the way: TreeData.elemental_multiplier()
-now treats a matching element as a bonus, not neutral, per the design doc's
-own Prompt 3.2 wording. None of this has been playtested in a real Godot
-editor yet (not installed in this sandbox). Do that first and fix anything
-that feels off before moving on.
+(the four core upgrades), Prompt 3.2 (elemental selector buttons + visual
+indicators), Prompt 3.3 (the enchantment system), Prompt 4.1 (multi-stage
+axe-swing tween, tree shake, paired leaf/chip particles, smooth health bar,
+floating "+X Chops"), and Prompt 4.2 (AudioManager autoload: play_swing /
+play_hit / play_tree_crack / play_tree_fall / play_collect / play_upgrade /
+play_enchantment / play_ui_click, looping mute-able BGM, volumes and mute
+saved to user://audio.cfg; HitSfx node from Prompt 2.2 is gone). This has
+not been confirmed playtested in a real Godot editor session. Playtest the
+4.1 juice and 4.2 audio (overlapping hits, tree-fall+collect, upgrade chime,
+element click, enchantment reveal, quiet looping pad) and fix anything that
+feels off before moving on.
 
-Do Prompt 3.3 from mobile/readme.md (Phase 3): the enchantment system.
-EnchantmentData already exists (scripts/enchantment_data.gd) with its four
-kinds (Empowered, Elemental Surge, Gold Rush, Auto Boost) and static
-constructors, but nothing grants, applies, displays, or expires them yet.
-Wire a chance/milestone trigger after a tree falls, apply each kind's real
-effect, show a popup or banner plus small active-icons, and expire them
-correctly (remaining_trees vs. remaining_seconds). Keep changes inside
-ChopperMobile.
+Do Prompt 4.3 from mobile/readme.md (Phase 4): polish pass on UI. Buttons
+have pressed and disabled states; cost text turns red or greys out when
+unaffordable; Prestige button pulses when it becomes available; upcoming
+tree previews have a subtle idle animation; safe area handling for notched
+phones. A mute control that calls AudioManager.set_music_muted /
+toggle_music_mute would fit here if you add one. Keep changes inside
+ChopperMobile. Do not start Phase 5.
 ```

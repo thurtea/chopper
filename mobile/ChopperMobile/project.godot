@@ -1,23 +1,29 @@
 ; Engine configuration file.
-; Godot 4.3+ — the editor will bump the feature tag if you open this in a newer 4.x.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
 config/name="ChopperMobile"
 config/description="Little Chopper swings his axe and chops down trees."
 run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.3", "Mobile")
+config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://chopper-logo.jpg"
 
 [autoload]
 
 GameState="*res://autoload/game_state.gd"
-
-[gui]
-
-theme/custom="res://assets/themes/chopper_theme.tres"
+AudioManager="*res://autoload/audio_manager.gd"
 
 [display]
 
@@ -29,13 +35,16 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
 
+[gui]
+
+theme/custom="res://assets/themes/chopper_theme.tres"
+
 [input_devices]
 
 pointing/emulate_touch_from_mouse=true
 
 [rendering]
 
-renderer/rendering_method="mobile"
-renderer/rendering_method.mobile="mobile"
 textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="mobile"
 textures/vram_compression/import_etc2_astc=true
