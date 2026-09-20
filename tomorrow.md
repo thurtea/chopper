@@ -333,6 +333,60 @@ already covered.
   instead of a flat constant, so it still shows the right number now
   that the threshold scales).
 
+**ChopperMobile Prompt 5.3: Save/Load**
+
+- Done at the user's explicit request to continue immediately from 5.2,
+  again without the standing playtest gate (see "Not done" below).
+- New persistent save in `autoload/game_state.gd`: `_save_game()` /
+  `_load_game()`, writing plain JSON (`JSON.stringify()` /
+  `JSON.parse_string()`) to `user://save.json` via `FileAccess`. Chosen
+  over `ConfigFile` because the queue and enchantment list are arrays of
+  structured records (each tree/enchantment is several fields), which
+  JSON represents directly as nested arrays of dictionaries; ConfigFile
+  is a better fit for flat key/value settings, which is exactly what
+  `AudioManager` already uses it for.
+- **What's persisted**: total Chops, all three upgrade levels (Better
+  Axe/Auto Chopper/Element Power), prestige level, the full `ChopperData`
+  (axe damage, auto-chop rate, active/selected element, prestige
+  multiplier, Element Power trees remaining), the current tree and the
+  entire upcoming queue (every field on each `TreeData`), every active
+  `EnchantmentData` (kind, remaining trees/seconds, description,
+  magnitude), plus two internal-only counters (`_trees_chopped_total`,
+  the fractional Auto Chopper accumulator) so the enchantment milestone
+  countdown and passive-Chop fractions survive a restart exactly, not
+  just approximately. A `version` field (currently `1`) is written and
+  checked on load so a future format change can detect and discard an
+  incompatible old save instead of misreading it.
+- **What's NOT in this file, on purpose**: audio settings. `AudioManager`
+  has saved/loaded volumes and mute flags to its own `user://audio.cfg`
+  independently since Prompt 4.2, and still does — the design doc's
+  Prompt 5.3 checklist item "Audio settings" was already satisfied
+  before this prompt started, so nothing needed to change there.
+- **When it saves**: after every tree kill (inside
+  `GameState.chop_current_tree()`, only when `fell` is true — not on
+  every non-killing hit) and after every successful `buy_better_axe()` /
+  `buy_auto_chopper()` / `buy_element_power()` / `prestige_reset()` call
+  (never on a failed/unaffordable attempt, since those already return
+  early without changing state). This matches the design doc's "auto-save
+  after every tree kill and after every upgrade purchase" instruction;
+  prestige was folded into "upgrade purchase" here since it is the same
+  kind of state-changing action and skipping it would risk losing a
+  fresh prestige on an app close.
+- **When it loads**: `GameState._ready()` now tries `_load_game()`
+  first, and only falls back to the original hardcoded starting queue
+  (three fresh trees) if there is no valid save — missing file,
+  unreadable file, wrong `version`, or a JSON payload that isn't even a
+  Dictionary all count as "no valid save" and fall back safely rather
+  than crashing or leaving partially-applied state. `main.gd` needed no
+  changes: it already reads everything through `GameState`'s public vars
+  and connects to `stats_changed` in its own `_ready()`, which runs after
+  the `GameState` autoload's `_ready()` per normal Godot autoload
+  ordering, so the loaded state is already in place before the UI's
+  first `_refresh_ui()` call.
+- Out of scope on purpose: no in-game "New Game" / delete-save control,
+  no cloud save, no save slots. The design doc's Prompt 5.3 asked only
+  for "robust local saving" of a single ongoing run.
+
 ### Not done
 
 - **Playtest pass** (NEXT, still outstanding): none of Prompts 2.2
@@ -351,7 +405,7 @@ already covered.
   resets the run and shows the centered `PrestigeBanner`, and the
   not-ready `PrestigeHint` text ("x1.0 -> x1.1 at 1000") does not clip
   at its 12px font size inside the button's width.
-- Phase 5+: save/load (Prompt 5.3), mobile export. A mute control that
+- Phase 6+: mobile export and everything under it. A mute control that
   calls AudioManager.set_music_muted still has no UI home; it can land
   with 6.1 mobile polish without changing 4.2.
 - Prompt 5.2's new constants (tree scaling, prestige threshold growth)
@@ -361,19 +415,30 @@ already covered.
   below should specifically sanity-check that the new fast opening and
   the prestige cadence feel right, not just that they hit the target
   seconds.
+- Prompt 5.3's save/load has not been exercised in a real Godot process
+  either: nothing in this repo confirms `user://save.json` has actually
+  been written and re-read across a real app restart, only that the
+  serialize/deserialize code reads back its own field names correctly
+  by inspection. The playtest pass below should specifically: play a
+  bit, quit the app (not just close the window if that does not trigger
+  the same shutdown path), relaunch, and confirm Chops/upgrades/prestige/
+  current tree/queue/enchantments all match where the session left off;
+  also confirm a first-ever launch (no save file yet) still starts a
+  fresh run instead of erroring.
 
 ---
 
 ## What is next
 
-Phase 4 (juice, audio, UI polish), Prompt 5.1 (prestige UX), and Prompt
-5.2 (balance and progression curve) are all implemented per
-`mobile/readme.md`, but **none of Prompts 4.1 through 5.2 has been
-playtested in a real Godot editor yet** (see "Not done" above) — that
-gate was explicitly skipped for 5.1 and 5.2, not satisfied. Open the
-project in a real Godot editor and playtest all of it together —
-especially the new tree/prestige pacing from 5.2 — before starting
-Prompt 5.3 (save/load).
+Phase 4 (juice, audio, UI polish) and all of Phase 5 (Prompt 5.1 prestige
+UX, Prompt 5.2 balance/progression, Prompt 5.3 save/load) are now
+implemented per `mobile/readme.md`, but **none of Prompts 4.1 through 5.3
+has been playtested in a real Godot editor yet** (see "Not done" above)
+— that gate was explicitly skipped for 5.1, 5.2, and 5.3 in a row, not
+satisfied. Open the project in a real Godot editor and playtest all of
+it together before starting Phase 6 (mobile polish/release) — especially
+the new tree/prestige pacing from 5.2, and 5.3's save/load across an
+actual app restart, since neither has run in a real Godot process yet.
 
 ---
 
@@ -397,24 +462,27 @@ floating "+X Chops"), Prompt 4.2 (AudioManager autoload), Prompt 4.3
 button, idle preview cards, safe-area insets), Prompt 5.1 (prestige
 UX: currency/multiplier display, always-on multiplier preview, a
 confirmation dialog before resetting, and a post-prestige summary
-banner), and Prompt 5.2 (balance and progression curve: faster/cheaper
+banner), Prompt 5.2 (balance and progression curve: faster/cheaper
 early trees, a per-cycle-growing prestige threshold so cycles don't
 collapse toward instant, and every remaining balance constant —
 elemental multipliers, enchantment chances/magnitudes — centralized
-into UpgradeConfig). None of Prompts 2.2 through 5.2 has been confirmed
-playtested in a real Godot editor session. Prompts 5.1 and 5.2 were both
-done at the user's explicit request to skip that playtest gate rather
-than wait for it. Playtest 4.1–5.2 together (disabled upgrade look + red
-costs, Prestige pulse on unlock, staggered preview idle, notches not
-covering UI, the PrestigeConfirmDialog + PrestigeBanner flow, and
-especially whether the new faster tree pacing and prestige cadence from
-5.2 actually feel good, not just hit the target numbers on paper) and
-fix anything that feels off before moving on.
+into UpgradeConfig), and Prompt 5.3 (save/load: total Chops, all
+upgrade levels, prestige level/multiplier, current tree, upcoming
+queue, and active enchantments all persist to user://save.json as JSON,
+auto-saved after every tree kill and every successful upgrade/prestige
+purchase; audio settings already persisted separately via AudioManager
+since Prompt 4.2). None of Prompts 2.2 through 5.3 has been confirmed
+playtested in a real Godot editor session. Prompts 5.1, 5.2, and 5.3
+were all done at the user's explicit request to skip that playtest gate
+rather than wait for it. Playtest 4.1–5.3 together (disabled upgrade
+look + red costs, Prestige pulse on unlock, staggered preview idle,
+notches not covering UI, the PrestigeConfirmDialog + PrestigeBanner
+flow, whether the new faster tree pacing and prestige cadence from 5.2
+actually feel good, and specifically for 5.3: play, fully quit the app,
+relaunch, and confirm the run picks up exactly where it left off, plus
+that a first-ever launch with no save file still starts clean) and fix
+anything that feels off before moving on.
 
-Do Prompt 5.3 from mobile/readme.md (Phase 5): save/load. Implement
-robust local saving of total chops, all upgrade levels, prestige level
-and multiplier, current tree and upcoming queue, active enchantments and
-element, and audio settings, using Godot's ConfigFile or a simple JSON
-save. Auto-save after every tree kill and after every upgrade purchase.
-Keep changes inside ChopperMobile. Do not start Phase 6.
+Do not start Phase 6 (mobile polish/release) until that playtest pass is
+done. Keep any changes inside ChopperMobile.
 ```

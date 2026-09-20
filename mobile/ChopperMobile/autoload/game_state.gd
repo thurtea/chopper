@@ -40,10 +40,21 @@ var _auto_chop_accumulator: float = 0.0
 # milestone-guaranteed enchantment is due. Not player-facing.
 var _trees_chopped_total: int = 0
 
+# --- Prompt 5.3: persistent save ---
+# A separate file from AudioManager's own user://audio.cfg (Prompt 4.2),
+# which already saves/loads independently and keeps doing so; this file
+# is only the run state (currency, upgrades, prestige, current tree,
+# queue, enchantments). JSON over ConfigFile because the queue and
+# enchantment list are arrays of structured records, not flat key/value
+# pairs. SAVE_VERSION exists so a future format change can detect and
+# migrate (or discard) an older save instead of misreading it.
+const SAVE_PATH := "user://save.json"
+const SAVE_VERSION := 1
+
 
 func _ready() -> void:
 	randomize()
-	if upcoming_trees.is_empty():
+	if not _load_game():
 		upcoming_trees = [
 			TreeData.make(2, TreeData.Element.FIRE, 2),
 			TreeData.make(3, TreeData.Element.ICE, 1),
@@ -108,6 +119,8 @@ func chop_current_tree() -> Dictionary:
 		_tick_enchantments_by_tree()
 		granted = _maybe_grant_enchantment()
 	stats_changed.emit()
+	if fell:
+		_save_game()
 	return {"damage": applied, "fell": fell, "reward": reward, "enchantment": granted}
 
 
@@ -208,6 +221,7 @@ func buy_better_axe() -> bool:
 	axe_level += 1
 	chopper.axe_damage = UpgradeConfig.axe_damage_for_level(axe_level)
 	stats_changed.emit()
+	_save_game()
 	return true
 
 
@@ -219,6 +233,7 @@ func buy_auto_chopper() -> bool:
 	auto_chopper_level += 1
 	chopper.auto_chop_rate = UpgradeConfig.auto_chop_rate_for_level(auto_chopper_level)
 	stats_changed.emit()
+	_save_game()
 	return true
 
 
@@ -244,6 +259,7 @@ func buy_element_power() -> bool:
 	chopper.active_element = chopper.selected_element
 	chopper.element_trees_remaining = UpgradeConfig.ELEMENT_POWER_TREES
 	stats_changed.emit()
+	_save_game()
 	return true
 
 
@@ -281,6 +297,7 @@ func prestige_reset() -> bool:
 	_trees_chopped_total = 0
 	stats_changed.emit()
 	prestiged.emit(prestige_level, new_multiplier, previous_multiplier)
+	_save_game()
 	return true
 
 
@@ -396,3 +413,150 @@ func _grant_random_enchantment() -> EnchantmentData:
 			chopper.active_element = element
 			chopper.element_trees_remaining = UpgradeConfig.ELEMENT_POWER_TREES
 			return enchantment
+
+
+## Prompt 5.3: persistent save/load. Writes the whole run (currency,
+## upgrade levels, prestige, chopper stats, current tree, upcoming
+## queue, active enchantments) as JSON to SAVE_PATH. Auto-saved after
+## every tree kill and every successful upgrade/prestige purchase (see
+## the call sites above); never saved on a plain non-killing hit, since
+## the design doc only asks for a save "after every tree kill."
+## Audio settings are not part of this file: AudioManager has saved and
+## loaded those independently to user://audio.cfg since Prompt 4.2.
+
+func _save_game() -> void:
+	var upcoming_data: Array = []
+	for tree in upcoming_trees:
+		upcoming_data.append(_tree_to_dict(tree))
+	var enchantment_data: Array = []
+	for enchantment in active_enchantments:
+		enchantment_data.append(_enchantment_to_dict(enchantment))
+	var data := {
+		"version": SAVE_VERSION,
+		"chops": chops,
+		"axe_level": axe_level,
+		"auto_chopper_level": auto_chopper_level,
+		"element_power_level": element_power_level,
+		"prestige_level": prestige_level,
+		"trees_chopped_total": _trees_chopped_total,
+		"auto_chop_accumulator": _auto_chop_accumulator,
+		"chopper": _chopper_to_dict(chopper),
+		"current_tree": _tree_to_dict(current_tree),
+		"upcoming_trees": upcoming_data,
+		"active_enchantments": enchantment_data,
+	}
+	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file == null:
+		push_warning("GameState: failed to open %s for writing (%s)" % [SAVE_PATH, error_string(FileAccess.get_open_error())])
+		return
+	file.store_string(JSON.stringify(data))
+
+
+## Returns true if a valid save was found and loaded (skipping the
+## fresh-run defaults in _ready()), false otherwise (no file, unreadable,
+## wrong version, or malformed content) — any failure just leaves every
+## var at its already-initialized fresh-run default.
+func _load_game() -> bool:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return false
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		return false
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return false
+	var data: Dictionary = parsed
+	if int(data.get("version", -1)) != SAVE_VERSION:
+		return false
+	if not (data.has("current_tree") and data.has("chopper")):
+		return false
+
+	chops = int(data.get("chops", 0))
+	axe_level = int(data.get("axe_level", 0))
+	auto_chopper_level = int(data.get("auto_chopper_level", 0))
+	element_power_level = int(data.get("element_power_level", 0))
+	prestige_level = int(data.get("prestige_level", 0))
+	_trees_chopped_total = int(data.get("trees_chopped_total", 0))
+	_auto_chop_accumulator = float(data.get("auto_chop_accumulator", 0.0))
+	chopper = _chopper_from_dict(data["chopper"])
+	current_tree = _tree_from_dict(data["current_tree"])
+
+	upcoming_trees.clear()
+	for tree_data in data.get("upcoming_trees", []):
+		if typeof(tree_data) == TYPE_DICTIONARY:
+			upcoming_trees.append(_tree_from_dict(tree_data))
+
+	active_enchantments.clear()
+	for enchantment_data in data.get("active_enchantments", []):
+		if typeof(enchantment_data) == TYPE_DICTIONARY:
+			active_enchantments.append(_enchantment_from_dict(enchantment_data))
+
+	return true
+
+
+func _chopper_to_dict(data: ChopperData) -> Dictionary:
+	return {
+		"axe_damage": data.axe_damage,
+		"auto_chop_rate": data.auto_chop_rate,
+		"active_element": data.active_element,
+		"selected_element": data.selected_element,
+		"prestige_multiplier": data.prestige_multiplier,
+		"element_trees_remaining": data.element_trees_remaining,
+	}
+
+
+func _chopper_from_dict(data: Dictionary) -> ChopperData:
+	var chopper_data := ChopperData.new()
+	chopper_data.axe_damage = int(data.get("axe_damage", 1))
+	chopper_data.auto_chop_rate = float(data.get("auto_chop_rate", 0.0))
+	chopper_data.active_element = int(data.get("active_element", TreeData.Element.NONE))
+	chopper_data.selected_element = int(data.get("selected_element", TreeData.Element.NONE))
+	chopper_data.prestige_multiplier = float(data.get("prestige_multiplier", 1.0))
+	chopper_data.element_trees_remaining = int(data.get("element_trees_remaining", 0))
+	return chopper_data
+
+
+func _tree_to_dict(data: TreeData) -> Dictionary:
+	return {
+		"health": data.health,
+		"max_health": data.max_health,
+		"element": data.element,
+		"chop_reward": data.chop_reward,
+		"tree_level": data.tree_level,
+		"difficulty": data.difficulty,
+		"is_boss": data.is_boss,
+		"is_enchanted": data.is_enchanted,
+	}
+
+
+func _tree_from_dict(data: Dictionary) -> TreeData:
+	var tree := TreeData.new()
+	tree.health = int(data.get("health", 1))
+	tree.max_health = int(data.get("max_health", 1))
+	tree.element = int(data.get("element", TreeData.Element.NONE))
+	tree.chop_reward = int(data.get("chop_reward", 0))
+	tree.tree_level = int(data.get("tree_level", 1))
+	tree.difficulty = int(data.get("difficulty", 1))
+	tree.is_boss = bool(data.get("is_boss", false))
+	tree.is_enchanted = bool(data.get("is_enchanted", false))
+	return tree
+
+
+func _enchantment_to_dict(data: EnchantmentData) -> Dictionary:
+	return {
+		"kind": data.kind,
+		"remaining_trees": data.remaining_trees,
+		"remaining_seconds": data.remaining_seconds,
+		"description": data.description,
+		"magnitude": data.magnitude,
+	}
+
+
+func _enchantment_from_dict(data: Dictionary) -> EnchantmentData:
+	var enchantment := EnchantmentData.new()
+	enchantment.kind = int(data.get("kind", EnchantmentData.Kind.EMPOWERED))
+	enchantment.remaining_trees = int(data.get("remaining_trees", 0))
+	enchantment.remaining_seconds = float(data.get("remaining_seconds", 0.0))
+	enchantment.description = String(data.get("description", ""))
+	enchantment.magnitude = float(data.get("magnitude", 1.0))
+	return enchantment
