@@ -1,4 +1,4 @@
-# Chopper Mobile — pickup notes
+# Chopper Mobile: pickup notes
 
 Canonical handoff for the whole Chopper repo (web + mobile) lives one level up:
 
@@ -14,17 +14,23 @@ Source of truth for the full prompt sequence: `readme.md` in this same `mobile/`
 
 ## Snapshot (2026-09-20)
 
-**Done:** Prompts 1.1, 1.2, 2.1, 2.2: scaffold, wooden UI, data models,
-GameState, and manual chopping. Tapping the tree now deals damage, shows
-floating numbers, shakes the screen, bursts particles, plays a hit sound,
-and on kill plays a tree-fall animation, awards Chops, and pulls the next
-tree from the queue. App icon = `chopper-logo.jpg`.
+**Done:** Prompts 1.1, 1.2, 2.1, 2.2, 2.3: scaffold, wooden UI, data models,
+GameState, manual chopping, and weighted queue generation. Tapping the tree
+deals damage, shows floating numbers, shakes the screen, bursts particles,
+plays a hit sound, and on kill plays a tree-fall animation, awards Chops,
+and pulls the next tree from the queue. That next tree's element is now
+picked by `GameState._pick_weighted_element()`, weighted against the
+current_tree + upcoming_trees window so the player sees a real mix rather
+than long same-element runs, and NONE trees stay a deliberate minority.
+App icon = `chopper-logo.jpg`.
 
-Not yet opened in the Godot editor to playtest (Godot is not installed in
-this sandbox). Needs a real playtest pass before calling 2.2 done, per
-`readme.md`'s own "test after each major prompt" rule.
+Phase 2 (the core chopping loop) is feature-complete per `readme.md`, but
+none of it has been opened in the Godot editor to playtest yet (Godot is
+not installed in this sandbox). Needs a real playtest pass, including
+watching the preview strip over several kills to confirm the element mix
+actually feels varied, before starting Phase 3.
 
-**Next:** Prompt 2.3: weighted upcoming-tree queue generation (current
-generation is a flat random pick, just enough to keep the queue full).
+**Next:** playtest Phase 2, then Prompt 3.1 (Phase 3): the four core
+upgrades (Better Axe, Auto Chopper, Element Power, Prestige Reset).
 
 Paste the resume prompt from `../tomorrow.md` into Claude Code / Cursor.
