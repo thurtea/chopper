@@ -695,10 +695,18 @@
             document.querySelectorAll('.element-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            
-            // Add active class to selected button
-            event.target.classList.add('active');
-            
+
+            // Add active class to the selected button, found by its own
+            // element class (each button already carries one: "element-btn
+            // fire", "element-btn ice", etc.) rather than the implicit
+            // global `event` object, which only Chrome/Safari/legacy IE
+            // populate as a non-standard convenience for inline onclick
+            // handlers; Firefox has never supported it, so `event.target`
+            // here would throw ReferenceError and silently break element
+            // selection on that browser.
+            const btn = document.querySelector(`.element-btn.${element}`);
+            if (btn) btn.classList.add('active');
+
             gameState.currentElement = element;
             gameState.elementPower = elementMultipliers[element];
         }
