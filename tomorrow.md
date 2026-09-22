@@ -16,6 +16,23 @@ playtested there, or the editor was just opened once, is not recorded here;
 confirm before assuming the "Not done: playtest pass" items below are
 already covered.
 
+**2026-09-22 update:** Godot 4.7.2 became available in a different sandbox
+(a flatpak), and the project did not actually load: `scripts/main.gd`
+(Prompt 4.3's safe-area code) called `DisplayServer.window_get_safe_area()`,
+which has never existed in a released Godot (real 4.7 name:
+`get_display_safe_area()`, and it returns display-space coordinates, not
+window-local ones, so the surrounding math needed a real fix, not just a
+rename), and `scripts/enchantment_data.gd` (Prompt 3.3) used `%g`, which
+GDScript's `%` operator does not support at all. Both were hard parse
+errors — the main scene could not load at all until they were fixed. With
+both fixed, the game loads with zero script errors, and a headless probe
+run through the real `GameState`/`AudioManager` autoloads confirmed
+chopping, buying an upgrade, saving, and reloading (`user://save.json`,
+Prompt 5.3's own previously-unverified gap) all round-trip correctly. Full
+detail: `mobile/tomorrow.md`'s own 2026-09-22 entry. This was headless (no
+display in that environment either), so it covers logic only, not the
+visual/interactive layer — see the narrowed "Not done" list below.
+
 ---
 
 ## Progress
@@ -389,56 +406,51 @@ already covered.
 
 ### Not done
 
-- **Playtest pass** (NEXT, still outstanding): none of Prompts 2.2
-  through 5.1 has a confirmed playtest recorded here (see the
-  untracked-editor-files note near the top of this file). This file
-  previously said not to start Prompt 5.1 before this playtest; the user
-  explicitly chose to skip that gate for this session, so 5.1 shipped
-  without it. For 4.3: confirm unaffordable upgrade costs turn red and
-  the button uses the grey disabled style; buy until Prestige unlocks
-  and watch it pulse; check the three upcoming cards swaying out of
-  phase; on a notched-phone emulator (or after shrinking the desktop
-  window, which will not itself simulate a notch) confirm the header
-  and bottom buttons still sit inside the safe rectangle. For 5.1
-  specifically: confirm the `PrestigeConfirmDialog` text is accurate and
-  legible against the theme, canceling truly changes nothing, confirming
-  resets the run and shows the centered `PrestigeBanner`, and the
-  not-ready `PrestigeHint` text ("x1.0 -> x1.1 at 1000") does not clip
-  at its 12px font size inside the button's width.
+- **Visual/interactive playtest pass** (NEXT, narrowed 2026-09-22 — see
+  the update note near the top of this file): the game now genuinely
+  loads (it did not, until two real script-parse bugs were fixed) and
+  its core logic — chopping, upgrades, prestige math, and 5.3's
+  save/load across a simulated restart — is confirmed correct via a
+  headless run through the real autoloads. What is left is purely
+  visual/interactive and needs a real display (editor or device), not
+  covered by anything headless: confirm unaffordable upgrade costs turn
+  red and the button uses the grey disabled style; buy until Prestige
+  unlocks and watch it pulse; check the three upcoming cards swaying out
+  of phase; on a notched-phone emulator (or after shrinking the desktop
+  window, which will not itself simulate a notch) confirm the header and
+  bottom buttons still sit inside the safe rectangle; confirm the
+  `PrestigeConfirmDialog` text is accurate and legible against the
+  theme, canceling truly changes nothing, confirming resets the run and
+  shows the centered `PrestigeBanner`, and the not-ready `PrestigeHint`
+  text ("x1.0 -> x1.18 at 1000" as of 5.2's threshold-growth change)
+  does not clip at its 12px font size inside the button's width; and
+  whether the faster 5.2 early-game pacing and prestige cadence actually
+  feel right by ear/eye, not just by the numbers a headless run can
+  check.
 - Phase 6+: mobile export and everything under it. A mute control that
   calls AudioManager.set_music_muted still has no UI home; it can land
   with 6.1 mobile polish without changing 4.2.
-- Prompt 5.2's new constants (tree scaling, prestige threshold growth)
-  are simulation-validated (python, greedy-upgrade-buying model), not
-  confirmed by an actual playtest in Godot. The simulation cannot see
-  "does this feel good," only the numeric pacing — the playtest pass
-  below should specifically sanity-check that the new fast opening and
-  the prestige cadence feel right, not just that they hit the target
-  seconds.
-- Prompt 5.3's save/load has not been exercised in a real Godot process
-  either: nothing in this repo confirms `user://save.json` has actually
-  been written and re-read across a real app restart, only that the
-  serialize/deserialize code reads back its own field names correctly
-  by inspection. The playtest pass below should specifically: play a
-  bit, quit the app (not just close the window if that does not trigger
-  the same shutdown path), relaunch, and confirm Chops/upgrades/prestige/
-  current tree/queue/enchantments all match where the session left off;
-  also confirm a first-ever launch (no save file yet) still starts a
-  fresh run instead of erroring.
+- Audio is still the procedural placeholder tones from Prompt 4.2
+  (`axe-impact.mp3`/`axe-slash.mp3` are real recorded clips and already
+  wired for hit/swing; everything else — tree crack, collect, upgrade,
+  enchantment, UI click, BGM — is a generated `AudioStreamWAV`). Whether
+  the mix and pacing feel right is a visual/interactive-pass question,
+  not something a headless run can judge.
 
 ---
 
 ## What is next
 
 Phase 4 (juice, audio, UI polish) and all of Phase 5 (Prompt 5.1 prestige
-UX, Prompt 5.2 balance/progression, Prompt 5.3 save/load) are now
-implemented per `mobile/readme.md`, but **none of Prompts 4.1 through 5.3
-has been playtested in a real Godot editor yet** (see "Not done" above)
-— that gate was explicitly skipped for 5.1, 5.2, and 5.3 in a row, not
-satisfied. Open the project in a real Godot editor and playtest all of
-it together before starting Phase 6 (mobile polish/release) — especially
-the new tree/prestige pacing from 5.2, and 5.3's save/load across an
-actual app restart, since neither has run in a real Godot process yet.
+UX, Prompt 5.2 balance/progression, Prompt 5.3 save/load) are implemented
+per `mobile/readme.md`. As of 2026-09-22 (see the update note near the
+top of this file), the project is confirmed to actually load and its
+core logic confirmed correct in a real headless Godot run — two hard
+parse-error bugs from Prompts 3.3 and 4.3 that blocked the game from
+loading at all were found and fixed in the process. What remains before
+Phase 6 (mobile polish/release) is the visual/interactive layer only
+(see "Not done" above): open the project in a real Godot editor or on a
+device and playtest it with actual eyes/ears/touch.
 
 ---
 
@@ -471,18 +483,29 @@ upgrade levels, prestige level/multiplier, current tree, upcoming
 queue, and active enchantments all persist to user://save.json as JSON,
 auto-saved after every tree kill and every successful upgrade/prestige
 purchase; audio settings already persisted separately via AudioManager
-since Prompt 4.2). None of Prompts 2.2 through 5.3 has been confirmed
-playtested in a real Godot editor session. Prompts 5.1, 5.2, and 5.3
-were all done at the user's explicit request to skip that playtest gate
-rather than wait for it. Playtest 4.1–5.3 together (disabled upgrade
-look + red costs, Prestige pulse on unlock, staggered preview idle,
-notches not covering UI, the PrestigeConfirmDialog + PrestigeBanner
-flow, whether the new faster tree pacing and prestige cadence from 5.2
-actually feel good, and specifically for 5.3: play, fully quit the app,
-relaunch, and confirm the run picks up exactly where it left off, plus
-that a first-ever launch with no save file still starts clean) and fix
-anything that feels off before moving on.
+since Prompt 4.2).
 
-Do not start Phase 6 (mobile polish/release) until that playtest pass is
-done. Keep any changes inside ChopperMobile.
+2026-09-22: the game did not actually load until this session — two
+hard parse errors (Prompt 4.3's `DisplayServer.window_get_safe_area()`,
+which never existed in any released Godot; Prompt 3.3's `%g`, which
+GDScript's `%` operator does not support) blocked the main scene from
+compiling at all. Both are fixed. A headless run through the real
+GameState/AudioManager autoloads (no display available in that
+environment) then confirmed the core logic genuinely works: chopping,
+buying an upgrade, and — Prompt 5.3's own previously-unverified gap —
+user://save.json actually round-trips correctly across a simulated app
+restart, plus the no-save fresh-install fallback. See this file's own
+2026-09-22 update note near the top, and mobile/tomorrow.md, for detail.
+
+Still outstanding: the visual/interactive layer, which needs a real
+display (editor or device), not headless. Playtest 4.1-5.3 together
+(disabled upgrade look + red costs, Prestige pulse on unlock, staggered
+preview idle, notches not covering UI, the PrestigeConfirmDialog +
+PrestigeBanner flow, whether the new faster tree pacing and prestige
+cadence from 5.2 actually feel good by ear/eye, and for 5.3 specifically
+confirming the same save/load round trip by actually playing, quitting,
+and relaunching) and fix anything that feels off before moving on.
+
+Do not start Phase 6 (mobile polish/release) until that visual playtest
+pass is done. Keep any changes inside ChopperMobile.
 ```

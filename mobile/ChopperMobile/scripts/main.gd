@@ -370,7 +370,18 @@ func _safe_area_pads() -> Vector4:
 	var window_size := Vector2(DisplayServer.window_get_size())
 	if window_size.x <= 1.0 or window_size.y <= 1.0:
 		return Vector4.ZERO
-	var safe := DisplayServer.window_get_safe_area()
+	# Godot 4.7 renamed window_get_safe_area() (never existed in a
+	# released Godot; this project's 4.3-era plan predates the real
+	# rename) to get_display_safe_area(). It also changed meaning: the
+	# returned rect is in the *display's* screen-space coordinates, not
+	# window-local ones, so on a windowed desktop build (this playtest)
+	# it must be offset by the window's own screen position before
+	# comparing against window_size below. On a real fullscreen mobile
+	# export the window origin coincides with the display origin, so
+	# this offset is always zero there and the two cases share one path.
+	var safe := DisplayServer.get_display_safe_area()
+	var window_pos := DisplayServer.window_get_position()
+	safe.position -= window_pos
 	if safe.size.x <= 0 or safe.size.y <= 0:
 		return Vector4.ZERO
 	var viewport_size := get_viewport().get_visible_rect().size

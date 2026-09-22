@@ -45,7 +45,10 @@ static func gold_rush() -> EnchantmentData:
 	enchantment.kind = Kind.GOLD_RUSH
 	enchantment.remaining_trees = UpgradeConfig.GOLD_RUSH_TREES
 	enchantment.magnitude = UpgradeConfig.GOLD_RUSH_MULTIPLIER
-	enchantment.description = "Next tree gives %g× Chops" % UpgradeConfig.GOLD_RUSH_MULTIPLIER
+	# %g is not a GDScript format specifier (unlike C/Python); %.1f
+	# matches the one-decimal multiplier convention main.gd's own
+	# prestige text already uses ("x%.1f -> x%.1f").
+	enchantment.description = "Next tree gives %.1f× Chops" % UpgradeConfig.GOLD_RUSH_MULTIPLIER
 	return enchantment
 
 
