@@ -85,6 +85,8 @@ func _ready() -> void:
 	prestige_button.resized.connect(_center_prestige_pivot)
 	_center_prestige_pivot()
 	get_viewport().size_changed.connect(_apply_safe_area)
+	if GameState.offline_earnings > 0:
+		_show_away_message(GameState.offline_earnings)
 	_apply_safe_area()
 	_refresh_ui()
 
@@ -593,6 +595,22 @@ func _shake(strength: float) -> void:
 		var offset := Vector2(randf_range(-strength, strength), randf_range(-strength, strength))
 		_shake_tween.tween_property(self, "position", offset, 0.03)
 	_shake_tween.tween_property(self, "position", Vector2.ZERO, 0.05)
+
+
+func _show_away_message(amount: int) -> void:
+	var label := Label.new()
+	label.text = "While you were away: +%d Chops" % amount
+	label.add_theme_font_size_override("font_size", 18)
+	label.add_theme_color_override("font_color", Color(1, 0.84, 0.2, 1))
+	label.z_index = 20
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	play_inner.add_child(label)
+	label.position = Vector2(24, 16)
+	var tween := create_tween()
+	tween.tween_interval(4.0)
+	tween.tween_property(label, "modulate:a", 0.0, 0.6)
+	tween.tween_callback(label.queue_free)
 
 
 ## Damage/reward text that arcs up from the tree and fades. A code-built

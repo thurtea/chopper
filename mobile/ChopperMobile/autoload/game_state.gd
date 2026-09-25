@@ -9,6 +9,8 @@ signal stats_changed
 ## you just got" summary without re-deriving it from before/after diffing
 ## stats_changed snapshots itself.
 signal prestiged(new_level: int, new_multiplier: float, previous_multiplier: float)
+## Chops granted for time away, after a successful load. 0 means none.
+signal offline_earnings_granted(amount: int)
 
 # --- Currency ---
 var chops: int = 0:
@@ -49,7 +51,12 @@ var _trees_chopped_total: int = 0
 # pairs. SAVE_VERSION exists so a future format change can detect and
 # migrate (or discard) an older save instead of misreading it.
 const SAVE_PATH := "user://save.json"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
+const AUTOSAVE_WAIT_SECONDS := 30.0
+
+## Chops granted on the most recent load for time spent away. The UI
+## reads this after _ready(); a v1 save migrates with this left at 0.
+var offline_earnings: int = 0
 
 
 func _ready() -> void:
@@ -61,6 +68,20 @@ func _ready() -> void:
 			TreeData.make(4, TreeData.Element.EARTH, 3),
 		]
 	stats_changed.emit()
+	var autosave := Timer.new()
+	autosave.wait_time = AUTOSAVE_WAIT_SECONDS
+	autosave.autostart = true
+	autosave.timeout.connect(_save_game)
+	add_child(autosave)
+
+
+## Godot 4.7 Node notifications (class_node.html): pause is 2015,
+## application focus-out is 2017, window close-request is 1006.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED \
+			or what == NOTIFICATION_APPLICATION_FOCUS_OUT \
+			or what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_save_game()
 
 
 ## Auto Chopper's passive income (Prompt 3.1). Purely a Chops generator,
@@ -433,6 +454,8 @@ func _save_game() -> void:
 		enchantment_data.append(_enchantment_to_dict(enchantment))
 	var data := {
 		"version": SAVE_VERSION,
+		"saved_unix": int(Time.get_unix_time_from_system()),
+		"effective_auto_chop_rate": effective_auto_chop_rate(),
 		"chops": chops,
 		"axe_level": axe_level,
 		"auto_chopper_level": auto_chopper_level,
@@ -466,7 +489,8 @@ func _load_game() -> bool:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return false
 	var data: Dictionary = parsed
-	if int(data.get("version", -1)) != SAVE_VERSION:
+	var version := int(data.get("version", -1))
+	if version < 1 or version > SAVE_VERSION:
 		return false
 	if not (data.has("current_tree") and data.has("chopper")):
 		return false
@@ -491,7 +515,27 @@ func _load_game() -> bool:
 		if typeof(enchantment_data) == TYPE_DICTIONARY:
 			active_enchantments.append(_enchantment_from_dict(enchantment_data))
 
+	offline_earnings = 0
+	if version >= 2:
+		offline_earnings = _offline_chops(
+			int(data.get("saved_unix", 0)),
+			float(data.get("effective_auto_chop_rate", 0.0))
+		)
+		if offline_earnings > 0:
+			chops += offline_earnings
 	return true
+
+
+## v1 saves have no timestamp. Missing or backwards clocks grant nothing,
+## so a migrated file cannot be paid as if it were saved in 1970.
+func _offline_chops(saved_unix: int, saved_rate: float) -> int:
+	if saved_unix <= 0 or saved_rate <= 0.0:
+		return 0
+	var now := int(Time.get_unix_time_from_system())
+	if now <= saved_unix:
+		return 0
+	var elapsed := mini(now - saved_unix, UpgradeConfig.OFFLINE_EARNINGS_CAP_SECONDS)
+	return int(floor(saved_rate * float(elapsed)))
 
 
 func _chopper_to_dict(data: ChopperData) -> Dictionary:

@@ -22,6 +22,10 @@ const BETTER_AXE_DAMAGE_PER_LEVEL: int = 1
 const AUTO_CHOPPER_BASE_COST: int = 100
 const AUTO_CHOPPER_COST_GROWTH: float = 1.2
 const AUTO_CHOPPER_RATE_PER_LEVEL: float = 0.5
+## Offline auto-chop is paid from the saved rate, but only up to this
+## many seconds. Eight hours: long enough to cover a night away, short
+## enough that a clock jump cannot mint a huge pile of Chops.
+const OFFLINE_EARNINGS_CAP_SECONDS: int = 8 * 60 * 60
 
 # --- Element Power: flat-cost, repeatable temporary buff ---
 # Not a scaling-cost permanent level like the two above: this buys a
